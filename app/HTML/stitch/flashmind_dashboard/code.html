@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FlashMind - Dashboard</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Lexend:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-tint": "#0053db",
+                      "surface": "#f8f9fb",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-container": "#996100",
+                      "on-background": "#191c1e",
+                      "tertiary-fixed": "#ffddb8",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "primary": "#004ac6",
+                      "outline-variant": "#c3c6d7",
+                      "on-surface-variant": "#434655",
+                      "inverse-primary": "#b4c5ff",
+                      "on-tertiary-fixed-variant": "#653e00",
+                      "tertiary": "#784b00",
+                      "secondary-fixed": "#6ffbbe",
+                      "primary-fixed": "#dbe1ff",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed-variant": "#003ea8",
+                      "on-error-container": "#93000a",
+                      "surface-container-highest": "#e1e2e4",
+                      "secondary-container": "#6cf8bb",
+                      "on-surface": "#191c1e",
+                      "on-secondary-container": "#00714d",
+                      "surface-container-lowest": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface-container-low": "#f3f4f6",
+                      "surface-container-high": "#e7e8ea",
+                      "on-primary-container": "#eeefff",
+                      "outline": "#737686",
+                      "on-secondary-fixed-variant": "#005236",
+                      "on-primary-fixed": "#00174b",
+                      "on-secondary-fixed": "#002113",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed-dim": "#ffb95f",
+                      "on-tertiary-container": "#ffeedd",
+                      "inverse-on-surface": "#f0f1f3",
+                      "inverse-surface": "#2e3132",
+                      "surface-container": "#edeef0",
+                      "primary-container": "#2563eb",
+                      "background": "#f8f9fb",
+                      "error-container": "#ffdad6",
+                      "surface-variant": "#e1e2e4",
+                      "surface-dim": "#d9dadc",
+                      "secondary": "#006c49",
+                      "on-error": "#ffffff",
+                      "secondary-fixed-dim": "#4edea3",
+                      "on-tertiary-fixed": "#2a1700",
+                      "surface-bright": "#f8f9fb"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "margin": "24px",
+                      "lg": "24px",
+                      "gutter": "16px",
+                      "xs": "4px",
+                      "xl": "40px",
+                      "base": "8px",
+                      "sm": "12px"
+              },
+              "fontFamily": {
+                      "headline-md": ["Lexend", "sans-serif"],
+                      "headline-lg": ["Lexend", "sans-serif"],
+                      "body-md": ["Inter", "sans-serif"],
+                      "body-lg": ["Inter", "sans-serif"],
+                      "label-sm": ["Inter", "sans-serif"],
+                      "headline-xl": ["Lexend", "sans-serif"],
+                      "label-md": ["Inter", "sans-serif"]
+              },
+              "fontSize": {
+                      "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.25", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                      "headline-xl": ["40px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.02em", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased min-h-screen flex">
+<!-- Shared Component: SideNavBar -->
+<aside class="hidden md:flex bg-surface-container-lowest dark:bg-gray-900 border-outline-variant shadow-[4px_0_10px_rgba(0,0,0,0.05)] h-screen w-64 fixed left-0 top-0 border-r flex-col p-6 gap-8 z-50">
+<!-- Header -->
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden shrink-0">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="Close up portrait of a young professional man with short dark hair smiling gently against a light gray background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCH9oIgxs8X_KVUeymjBWrj3HlEImqlfVMJgtBZB7NsQUbvxxAk7kN2jfBKWPpFVL7tD8mC3AhWrOsb5ahgWR4Pa5r0K1C7ieNeTj3oPysdHr3MQmSY2x67dcWTBfz-J03XGDPbTiJMJFjbXOducZ4Yr7ujBTbywNrDDv1dM1WiZI-wxdxWzpVhVUr_lMPIzaUGLoIEk9nuIM9o1lfEQPyF0lS3UksTEypsZRZ-tR7YzhQX_rkwh6OMPzi66q1YEoQJkEHgkbpfd30x"/>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md text-2xl font-black text-primary tracking-tight">FlashMind</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Master Your Learning</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex flex-col gap-base flex-1">
+<!-- Active Tab: Dashboard -->
+<a class="flex items-center gap-sm px-md py-sm rounded-DEFAULT text-primary font-bold border-r-4 border-primary bg-primary-fixed-dim/20 transition-colors" href="#">
+<span class="material-symbols-outlined fill" data-icon="dashboard" data-weight="fill">dashboard</span>
+<span class="font-label-md text-label-md font-bold">Dashboard</span>
+</a>
+<!-- Inactive Tabs -->
+<a class="flex items-center gap-sm px-md py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="layers">layers</span>
+<span class="font-label-md text-label-md">My Decks</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span class="font-label-md text-label-md">Study Session</span>
+</a>
+<a class="flex items-center gap-sm px-md py-sm rounded-DEFAULT text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span class="font-label-md text-label-md">Statistics</span>
+</a>
+</nav>
+<!-- CTA -->
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-DEFAULT border-b-2 border-on-primary-fixed-variant hover:bg-on-primary-fixed-variant transition-colors flex items-center justify-center gap-base">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            Create New Deck
+        </button>
+</aside>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col min-w-0 md:ml-64">
+<!-- Shared Component: TopAppBar -->
+<!-- Note: Applied ml-64 from JSON exactly as requested via style_shell_layout, though structural placement mitigates overflow -->
+<header class="bg-surface-container-lowest/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-40 w-full border-b border-outline-variant flex justify-between items-center px-8 py-3 focus-within:ring-2 focus-within:ring-primary-container/20">
+<!-- Search Bar on Left -->
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline text-[20px]">search</span>
+<input class="w-full pl-xl pr-sm py-xs rounded-DEFAULT border border-outline-variant bg-surface-container-lowest text-on-surface focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-body-md transition-all placeholder:text-outline" placeholder="Search decks..." type="text"/>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:text-primary transition-colors w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-fixed overflow-hidden border border-outline-variant shrink-0 ml-base hidden md:block">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="Close up portrait of a young professional man with short dark hair smiling gently against a light gray background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0TGe2sGyeOUJ7stlsSPlxzNIcSzkmUTUDIChLKECRcwFXZY-um8HKAbHy6WK4MmhBFgeQH8qMIxrUOZeen2qkOqamC101-KLX8bp7ohWrXaluVNlct-N6X1SFL0Zz86F6n94myTid35bA3BUPg7fgl_hzJUf6HYb6Yej8-I-6q_Xe1VmGV6-nQ7y5r65snKSsDIrD_l218raAO_dNRpoeXm06OGqx305eGhQarblN7m7gGf0VphckNpcgHFsDxYeWlPZpPdE6xVr3"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<main class="flex-1 p-margin overflow-y-auto">
+<div class="max-w-[1200px] mx-auto space-y-xl">
+<!-- Welcome Section -->
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Welcome back, Alex!</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">You're making great progress. Ready for today's session?</p>
+</div>
+<!-- Bento Grid for High-Level Stats -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Streak Card -->
+<div class="md:col-span-4 bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-[0_4px_10px_rgba(0,0,0,0.02)] flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -right-6 -top-6 w-32 h-32 bg-tertiary-fixed rounded-full opacity-20 group-hover:scale-110 transition-transform duration-500 blur-2xl"></div>
+<div class="flex items-center gap-sm mb-md relative z-10">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed text-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined fill text-[24px]">local_fire_department</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Daily Streak</h3>
+</div>
+<div class="relative z-10">
+<div class="flex items-baseline gap-xs">
+<span class="font-headline-xl text-headline-xl text-on-surface">25</span>
+<span class="font-body-md text-body-md text-on-surface-variant font-medium">Days</span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary mt-base flex items-center gap-xs">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> Keep it up!
+                            </p>
+</div>
+</div>
+<!-- Milestones Card -->
+<div class="md:col-span-8 bg-surface-container-lowest rounded-xl p-lg border border-outline-variant shadow-[0_4px_10px_rgba(0,0,0,0.02)] flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute -left-6 -bottom-6 w-40 h-40 bg-primary-fixed rounded-full opacity-20 group-hover:scale-110 transition-transform duration-500 blur-2xl"></div>
+<div class="flex items-center gap-sm mb-md relative z-10">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed text-primary flex items-center justify-center">
+<span class="material-symbols-outlined fill text-[24px]">emoji_events</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Learning Milestone</h3>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md relative z-10">
+<div>
+<div class="flex items-baseline gap-xs">
+<span class="font-headline-xl text-headline-xl text-on-surface">500</span>
+<span class="font-body-md text-body-md text-on-surface-variant font-medium">Concepts Learned</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">This month</p>
+</div>
+<!-- Mini Progress Visual -->
+<div class="w-full md:w-64">
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-xs">
+<span>Goal: 600</span>
+<span class="text-primary font-bold">83%</span>
+</div>
+<div class="w-full h-3 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 83%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Decks Section -->
+<div>
+<div class="flex justify-between items-end mb-lg">
+<h3 class="font-headline-md text-headline-md text-on-surface">Active Decks</h3>
+<button class="font-label-md text-label-md text-primary hover:text-on-primary-fixed-variant transition-colors flex items-center gap-xs">
+                            View All <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<!-- Decks Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Deck 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-margin border border-outline-variant shadow-[0_4px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,74,198,0.08)] transition-shadow duration-300 flex flex-col">
+<div class="flex justify-between items-start mb-md">
+<div class="w-12 h-12 rounded-lg bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[28px]">language</span>
+</div>
+<span class="px-sm py-xs rounded-DEFAULT bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">Language</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-xs">English Vocabulary</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-1">Advanced conversational terms and idioms.</p>
+<div class="mb-lg">
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-base">
+<span>Mastery</span>
+<span class="text-on-surface font-bold">75%</span>
+</div>
+<div class="w-full h-2 bg-primary-fixed rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 75%"></div>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-DEFAULT border-b-2 border-on-primary-fixed-variant hover:bg-on-primary-fixed-variant transition-colors">
+                                Review 24 Cards
+                            </button>
+</div>
+<!-- Deck 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-margin border border-outline-variant shadow-[0_4px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,74,198,0.08)] transition-shadow duration-300 flex flex-col">
+<div class="flex justify-between items-start mb-md">
+<div class="w-12 h-12 rounded-lg bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[28px]">code</span>
+</div>
+<span class="px-sm py-xs rounded-DEFAULT bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm">Programming</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-xs">JavaScript Basics</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-1">Core syntax, array methods, and async logic.</p>
+<div class="mb-lg">
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-base">
+<span>Mastery</span>
+<span class="text-on-surface font-bold">42%</span>
+</div>
+<div class="w-full h-2 bg-primary-fixed rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 42%"></div>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-DEFAULT border-b-2 border-on-primary-fixed-variant hover:bg-on-primary-fixed-variant transition-colors">
+                                Review 12 Cards
+                            </button>
+</div>
+<!-- Deck 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-margin border border-outline-variant shadow-[0_4px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_20px_rgba(0,74,198,0.08)] transition-shadow duration-300 flex flex-col">
+<div class="flex justify-between items-start mb-md">
+<div class="w-12 h-12 rounded-lg bg-surface-variant flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[28px]">public</span>
+</div>
+<span class="px-sm py-xs rounded-DEFAULT bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm">Geography</span>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-xs">World Geography</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-1">Capitals, continents, and major landmarks.</p>
+<div class="mb-lg">
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mb-base">
+<span>Mastery</span>
+<span class="text-on-surface font-bold">8%</span>
+</div>
+<div class="w-full h-2 bg-primary-fixed rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 8%"></div>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md py-sm rounded-DEFAULT border-b-2 border-on-primary-fixed-variant hover:bg-on-primary-fixed-variant transition-colors">
+                                Review 50 Cards
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
