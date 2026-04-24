@@ -56,7 +56,20 @@ class ScreenController extends Controller
 
     public function deckDetail(string $deck): View
     {
-        return view('screens.deck-detail', ['title' => 'FlashMind - Deck Detail']);
+        [$user] = $this->resolveStudyContext(request());
+
+        $deckModel = Deck::query()->where('user_id', $user?->id)->findOrFail($deck);
+
+        $cards = $deckModel->cards()
+            ->with('note:id,front_plain_text,back_plain_text,front_text')
+            ->orderBy('id', 'desc')
+            ->paginate(20);
+
+        return view('screens.deck-detail', [
+            'title' => 'FlashMind - ' . $deckModel->name,
+            'deck' => $deckModel,
+            'cards' => $cards,
+        ]);
     }
 
     public function imports(Request $request): View

@@ -10,7 +10,17 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@500;600;700;800&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400" rel="stylesheet">
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @php
+            $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
+            $cssFile = $manifest['resources/css/app.css']['file'] ?? '';
+            $jsFile = $manifest['resources/js/app.js']['file'] ?? '';
+        @endphp
+        @if($cssFile)
+            <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}" />
+        @endif
+        @if($jsFile)
+            <script type="module" src="{{ asset('build/' . $jsFile) }}"></script>
+        @endif
     </head>
     @php($isStudyPage = request()->routeIs('study.*'))
     @php($studyMode = request('mode', 'flip'))
@@ -80,11 +90,6 @@
                         <span>Statistics</span>
                     </a>
                 </nav>
-
-                <button class="primary-button primary-button--full" type="button">
-                    <span class="material-symbols-outlined">add</span>
-                    <span>Create New Deck</span>
-                </button>
             </aside>
 
             <div class="main-shell">
@@ -134,5 +139,25 @@
                 </main>
             </div>
         </div>
-    </body>
+        <dialog id="create-deck-modal" class="custom-modal">
+        <form method="dialog" class="custom-modal__form">
+            <div class="custom-modal__header">
+                <h2>Create New Deck</h2>
+                <button type="button" class="icon-button" onclick="document.getElementById('create-deck-modal').close()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="custom-modal__body">
+                <label class="import-field">
+                    <span class="import-field__label">Deck Name</span>
+                    <input type="text" id="new-deck-name" class="import-file-input" placeholder="e.g. English Vocabulary" required autocomplete="off" />
+                </label>
+            </div>
+            <div class="custom-modal__footer">
+                <button type="button" class="secondary-button" onclick="document.getElementById('create-deck-modal').close()">Cancel</button>
+                <button type="submit" class="primary-button" id="create-deck-submit-btn">Create Deck</button>
+            </div>
+        </form>
+    </dialog>
+</body>
 </html>

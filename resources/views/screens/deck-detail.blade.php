@@ -1,106 +1,95 @@
-@extends('layouts.app')
+@extends('layouts.app', ['page' => 'deck-detail'])
 
 @section('content')
-    <section class="page-section">
-        <div class="breadcrumb">
-            <a href="{{ route('dashboard') }}">My Decks</a>
-            <span>/</span>
-            <span>English Vocabulary</span>
+<div class="deck-detail-container">
+    <div class="card-manager-header">
+        <h1 class="card-manager-title">Card Management <span class="card-manager-deck-badge">{{ $deck->name }}</span></h1>
+    </div>
+
+    <div class="card-manager-toolbar">
+        <div class="toolbar-filters">
+            <select class="import-select toolbar-select">
+                <option value="all">All Decks</option>
+                <option value="{{ $deck->id }}" selected>{{ $deck->name }}</option>
+            </select>
+            <select class="import-select toolbar-select">
+                <option value="all">Any Status</option>
+                <option value="learning">Learning</option>
+                <option value="review">Review</option>
+                <option value="new">New</option>
+            </select>
         </div>
-
-        <section class="section-header section-header--stack-mobile">
-            <div>
-                <h1 class="hero__title">English Vocabulary</h1>
-                <p class="hero__subtitle">Giao tiếp hằng ngày - 142 cards đang được quản lý trong deck này.</p>
-            </div>
-            <div class="action-row">
-                <button class="secondary-button" type="button">
-                    <span class="material-symbols-outlined">upload_file</span>
-                    <span>Import TXT/CSV</span>
-                </button>
-                <button class="primary-button" type="button">
-                    <span class="material-symbols-outlined">add</span>
-                    <span>Add New Card</span>
-                </button>
-            </div>
-        </section>
-
-        <div class="card-grid">
-            <article class="vocab-card">
-                <div class="vocab-card__accent vocab-card__accent--green"></div>
-                <div class="vocab-card__head">
-                    <span class="status-badge status-badge--green">Mastered</span>
-                    <span class="rating-stars">★★☆</span>
-                </div>
-                <div class="vocab-card__body">
-                    <h3>accommodation</h3>
-                    <p>nơi ở, chỗ lưu trú</p>
-                </div>
-                <div class="vocab-card__foot">
-                    <span><span class="material-symbols-outlined">event</span> Hôm nay</span>
-                    <div class="inline-actions">
-                        <button class="icon-button icon-button--small" type="button"><span class="material-symbols-outlined">edit</span></button>
-                        <button class="icon-button icon-button--small" type="button"><span class="material-symbols-outlined">delete</span></button>
-                    </div>
-                </div>
-            </article>
-
-            <article class="vocab-card">
-                <div class="vocab-card__accent vocab-card__accent--amber"></div>
-                <div class="vocab-card__head">
-                    <span class="status-badge status-badge--amber">Learning</span>
-                    <span class="rating-stars">★★★</span>
-                </div>
-                <div class="vocab-card__body">
-                    <h3>departure gate</h3>
-                    <p>cổng khởi hành</p>
-                </div>
-                <div class="vocab-card__foot">
-                    <span><span class="material-symbols-outlined">event</span> 2 ngày nữa</span>
-                    <div class="inline-actions">
-                        <button class="icon-button icon-button--small" type="button"><span class="material-symbols-outlined">edit</span></button>
-                        <button class="icon-button icon-button--small" type="button"><span class="material-symbols-outlined">delete</span></button>
-                    </div>
-                </div>
-            </article>
-
-            <article class="vocab-card">
-                <div class="vocab-card__accent vocab-card__accent--blue"></div>
-                <div class="vocab-card__head">
-                    <span class="status-badge">Review</span>
-                    <span class="rating-stars">★☆☆</span>
-                </div>
-                <div class="vocab-card__body">
-                    <h3>make yourself at home</h3>
-                    <p>cứ tự nhiên như ở nhà</p>
-                </div>
-                <div class="vocab-card__foot">
-                    <span><span class="material-symbols-outlined">event</span> Quá hạn 1 ngày</span>
-                    <div class="inline-actions">
-                        <button class="icon-button icon-button--small" type="button"><span class="material-symbols-outlined">edit</span></button>
-                        <button class="icon-button icon-button--small" type="button"><span class="material-symbols-outlined">delete</span></button>
-                    </div>
-                </div>
-            </article>
-
-            <article class="vocab-card">
-                <div class="vocab-card__accent vocab-card__accent--slate"></div>
-                <div class="vocab-card__head">
-                    <span class="status-badge status-badge--slate">New</span>
-                    <span class="rating-stars">☆☆☆</span>
-                </div>
-                <div class="vocab-card__body">
-                    <h3>reservation confirmation</h3>
-                    <p>xác nhận đặt chỗ</p>
-                </div>
-                <div class="vocab-card__foot">
-                    <span><span class="material-symbols-outlined">new_releases</span> Mới</span>
-                    <div class="inline-actions">
-                        <button class="icon-button icon-button--small" type="button"><span class="material-symbols-outlined">edit</span></button>
-                        <button class="icon-button icon-button--small" type="button"><span class="material-symbols-outlined">delete</span></button>
-                    </div>
-                </div>
-            </article>
+        <div class="toolbar-actions">
+            <button class="secondary-button" type="button">
+                <span class="material-symbols-outlined" style="font-size: 1.25rem;">filter_list</span>
+                <span>More Filters</span>
+            </button>
         </div>
-    </section>
+    </div>
+
+    <div class="table-container">
+        <table class="card-table">
+            <thead>
+                <tr>
+                    <th class="col-checkbox"><input type="checkbox" aria-label="Select all cards"></th>
+                    <th class="col-front">FRONT</th>
+                    <th class="col-back">BACK</th>
+                    <th class="col-deck">DECK</th>
+                    <th class="col-status">STATUS</th>
+                    <th class="col-mastery">MASTERY</th>
+                    <th class="col-next">NEXT</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($cards as $card)
+                    <tr>
+                        <td class="col-checkbox"><input type="checkbox" aria-label="Select card"></td>
+                        <td class="col-front"><strong>{{ $card->note->front_plain_text ?? $card->note->front_text }}</strong></td>
+                        <td class="col-back">{{ \Illuminate\Support\Str::limit($card->note->back_plain_text ?? '', 50) }}</td>
+                        <td class="col-deck"><span class="badge badge--neutral">{{ $deck->name }}</span></td>
+                        <td class="col-status">
+                            @if($card->state === 'review')
+                                <span class="badge badge--success"><span class="badge-dot"></span> Review</span>
+                            @elseif($card->state === 'learning' || $card->state === 'relearning')
+                                <span class="badge badge--warning"><span class="badge-dot"></span> Learning</span>
+                            @else
+                                <span class="badge badge--neutral"><span class="badge-dot"></span> New</span>
+                            @endif
+                        </td>
+                        <td class="col-mastery">
+                            <div class="mastery-bar">
+                                @php
+                                    $masteryPercent = $card->state === 'review' ? min(100, $card->stability * 10) : ($card->state === 'new' ? 0 : 20);
+                                @endphp
+                                <div class="mastery-bar__fill" style="width: {{ $masteryPercent }}%"></div>
+                            </div>
+                        </td>
+                        <td class="col-next">
+                            @if(!$card->due_at)
+                                -
+                            @elseif($card->due_at->isPast() || $card->due_at->isToday())
+                                Today
+                            @else
+                                In {{ $card->due_at->diffInDays() }} days
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="empty-state-row">No cards found in this deck.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-manager-footer">
+        <div class="pagination-info">
+            Showing {{ $cards->firstItem() ?? 0 }} to {{ $cards->lastItem() ?? 0 }} of {{ $cards->total() }} cards
+        </div>
+        <div class="pagination-controls">
+            {{ $cards->links() }}
+        </div>
+    </div>
+</div>
 @endsection

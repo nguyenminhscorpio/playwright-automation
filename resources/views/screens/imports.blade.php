@@ -30,8 +30,9 @@
                             @forelse ($importDecks as $deck)
                                 <option value="{{ $deck->id }}" @selected(($importSelectedDeckId ?? null) === $deck->id)>{{ $deck->name }}</option>
                             @empty
-                                <option value="">No deck available</option>
+                                <option value="" disabled selected>No deck available</option>
                             @endforelse
+                            <option value="NEW_DECK" style="font-weight: bold; color: var(--text-brand);">+ Create New Deck...</option>
                         </select>
                     </label>
 

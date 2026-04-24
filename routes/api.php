@@ -11,6 +11,22 @@ Route::prefix('study')->group(function (): void {
     Route::post('/cards/{card}/play-tts', [StudySessionController::class, 'playTts']);
 });
 
+Route::post('/decks', function (\Illuminate\Http\Request $request) {
+    $validated = $request->validate(['name' => 'required|string|max:255']);
+    $user = \App\Models\User::firstOrCreate(
+        ['email' => 'dev.study@example.com'],
+        ['name' => 'Dev Learner', 'password' => bcrypt('password')]
+    );
+    
+    $deck = \App\Models\Deck::create([
+        'user_id' => $user->id,
+        'name' => $validated['name'],
+        'description' => 'Created via UI prompt'
+    ]);
+    
+    return response()->json($deck);
+});
+
 Route::prefix('imports')->group(function (): void {
     Route::get('/', [ImportController::class, 'index']);
     Route::get('/{importJob}', [ImportController::class, 'show']);

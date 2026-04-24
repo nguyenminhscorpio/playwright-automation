@@ -416,7 +416,7 @@ const renderProgress = (session) => {
     const progress = deriveProgress(session.progress);
     const deckName = session.current_card?.deck_name || document.body.dataset.studyDeckName || 'Study Session';
 
-    setText('[data-study-deck-name]', deckName);
+    setText('span[data-study-deck-name]', deckName);
     setText(
         '[data-study-progress-title]',
         progress.total > 0 ? `Card ${progress.currentIndex} of ${progress.total}` : 'Session Progress'
@@ -767,6 +767,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 localStorage.setItem(STUDY_MODE_KEY, nextMode);
             });
+        });
+    }
+
+    const createDeckModal = document.getElementById('create-deck-modal');
+    const createDeckForm = createDeckModal?.querySelector('form');
+    const newDeckNameInput = document.getElementById('new-deck-name');
+    const createDeckSubmitBtn = document.getElementById('create-deck-submit-btn');
+
+    const openCreateDeckModal = () => {
+        if (createDeckModal) {
+            newDeckNameInput.value = '';
+            createDeckModal.showModal();
+            newDeckNameInput.focus();
+        }
+    };
+
+    const createDeckBtn = document.querySelector('[data-create-deck-button]');
+    if (createDeckBtn) {
+        createDeckBtn.addEventListener('click', openCreateDeckModal);
+    }
+
+    if (createDeckForm) {
+        createDeckForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = newDeckNameInput.value.trim();
+            if (!name) return;
+            
+            try {
+                createDeckSubmitBtn.disabled = true;
+                const response = await fetch('/api/decks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Lỗi khi tạo Deck!');
+                }
+            } catch (err) {
+                alert('Lỗi mạng khi tạo Deck!');
+            } finally {
+                createDeckSubmitBtn.disabled = false;
+            }
+        });
+    }
+
+    const deckSelect = document.querySelector('[data-import-deck-select]');
+    if (deckSelect) {
+        // Remember previous valid selection
+        let previousValidSelection = deckSelect.value === 'NEW_DECK' ? '' : deckSelect.value;
+        
+        deckSelect.addEventListener('change', () => {
+            if (deckSelect.value === 'NEW_DECK') {
+                deckSelect.value = previousValidSelection; // Revert visually
+                openCreateDeckModal();
+            } else {
+                previousValidSelection = deckSelect.value;
+            }
         });
     }
 
