@@ -4,38 +4,37 @@ namespace App\Http\Controllers;
 
 use App\Models\Deck;
 use App\Models\User;
+use App\Repositories\CardRepository;
+use App\Services\DashboardStatsService;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\Response;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class ScreenController extends Controller
 {
-    public function dashboard(): View
+    public function dashboard(DashboardStatsService $dashboardStatsService): View
     {
-        [$user, $decks] = $this->resolveStudyContext(request());
+        [$user] = $this->resolveStudyContext(request());
+        $stats = $user ? $dashboardStatsService->build($user) : [
+            'daily_streak' => 0,
+            'monthly_learned' => 0,
+            'monthly_goal' => 600,
+            'active_decks' => [],
+            'totals' => [
+                'deck_count' => 0,
+                'card_count' => 0,
+                'note_count' => 0,
+                'due_count' => 0,
+            ],
+        ];
 
         return view('screens.dashboard', [
             'title' => 'FlashMind - Dashboard',
+            'page' => 'dashboard',
+            'dashboardUserId' => $user?->id,
             'dashboardUserName' => $user?->name ?? 'Learner',
-            'dashboardStats' => [
-                'deck_count' => $decks->count(),
-                'card_count' => $user?->cards()->count() ?? 0,
-                'note_count' => $user?->notes()->count() ?? 0,
-                'import_count' => $user?->importJobs()->count() ?? 0,
-                'latest_imported_cards' => $user?->importJobs()->where('status', 'imported')->sum('success_rows') ?? 0,
-            ],
-            'dashboardDecks' => $decks
-                ->loadCount(['cards', 'notes', 'importJobs'])
-                ->map(fn (Deck $deck): array => [
-                    'id' => $deck->id,
-                    'name' => $deck->name,
-                    'description' => $deck->description,
-                    'cards_count' => $deck->cards_count,
-                    'notes_count' => $deck->notes_count,
-                    'import_jobs_count' => $deck->import_jobs_count,
-                    'new_cards_count' => $deck->cards()->where('state', 'new')->count(),
-                ])
-                ->all(),
+            'dashboardStats' => $stats,
+            'dashboardDecks' => $stats['active_decks'],
             'recentImports' => $user?->importJobs()
                 ->with('deck:id,name')
                 ->latest('id')
@@ -54,21 +53,25 @@ class ScreenController extends Controller
         ]);
     }
 
-    public function deckDetail(string $deck): View
+    public function deckDetail(Request $request, string $deck, CardRepository $cardRepository): View
     {
-        [$user] = $this->resolveStudyContext(request());
+        [$user] = $this->resolveStudyContext($request);
 
         $deckModel = Deck::query()->where('user_id', $user?->id)->findOrFail($deck);
-
-        $cards = $deckModel->cards()
-            ->with('note:id,front_plain_text,back_plain_text,front_text')
-            ->orderBy('id', 'desc')
-            ->paginate(20);
+        $filters = [
+            'deck_id' => $deckModel->id,
+            'q' => $request->string('q')->toString(),
+            'status' => $request->string('status')->toString(),
+        ];
+        $cards = $cardRepository->paginateForUser($user, $filters, 20);
 
         return view('screens.deck-detail', [
             'title' => 'FlashMind - ' . $deckModel->name,
+            'page' => 'deck-detail',
+            'deckDetailUserId' => $user?->id,
             'deck' => $deckModel,
             'cards' => $cards,
+            'filters' => $filters,
         ]);
     }
 

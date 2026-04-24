@@ -54,9 +54,12 @@
         data-study-session-api-url="{{ url('/api/study/session') }}"
         data-study-check-answer-url-template="{{ url('/api/study/cards/__CARD__/check-answer') }}"
         data-study-rate-url-template="{{ url('/api/study/cards/__CARD__/rate') }}"
-        data-study-tts-url-template="{{ url('/api/study/cards/__CARD__/play-tts') }}"
         data-import-preview-url="{{ url('/api/imports/txt/preview') }}"
         data-import-confirm-url="{{ url('/api/imports/txt/confirm') }}"
+        data-decks-api-url="{{ url('/api/decks') }}"
+        data-deck-url-template="{{ url('/api/decks/__DECK__') }}"
+        data-cards-api-url="{{ url('/api/cards') }}"
+        data-card-url-template="{{ url('/api/cards/__CARD__') }}"
     >
         <div class="app-shell">
             <aside class="sidebar">
@@ -73,7 +76,7 @@
                         <span class="material-symbols-outlined">dashboard</span>
                         <span>Dashboard</span>
                     </a>
-                    <a href="{{ route('decks.show', 1) }}" class="nav__link {{ request()->routeIs('decks.*') ? 'is-active' : '' }}">
+                    <a href="{{ request()->routeIs('decks.*') ? url()->current() : route('decks.show', request()->route('deck') ?? 1) }}" class="nav__link {{ request()->routeIs('decks.*') ? 'is-active' : '' }}">
                         <span class="material-symbols-outlined">layers</span>
                         <span>My Decks</span>
                     </a>
@@ -84,10 +87,6 @@
                     <a href="{{ route('imports.index') }}" class="nav__link {{ request()->routeIs('imports.*') ? 'is-active' : '' }}">
                         <span class="material-symbols-outlined">upload_file</span>
                         <span>Import</span>
-                    </a>
-                    <a href="#" class="nav__link">
-                        <span class="material-symbols-outlined">bar_chart</span>
-                        <span>Statistics</span>
                     </a>
                 </nav>
             </aside>
@@ -102,35 +101,17 @@
                     <div class="topbar__actions">
                         @if ($isStudyPage)
                             <div class="study-mode-switch" data-study-mode-switch>
-                                <a
-                                    href="{{ $flipModeUrl }}"
-                                    class="study-mode-switch__option {{ $studyMode === 'flip' ? 'is-active' : '' }}"
-                                    data-study-mode-option="flip"
-                                    aria-pressed="{{ $studyMode === 'flip' ? 'true' : 'false' }}"
-                                >
+                                <a href="{{ $flipModeUrl }}" class="study-mode-switch__option {{ $studyMode === 'flip' ? 'is-active' : '' }}" data-study-mode-option="flip" aria-pressed="{{ $studyMode === 'flip' ? 'true' : 'false' }}">
                                     <span class="material-symbols-outlined">style</span>
-                                    <span>Lật thẻ</span>
+                                    <span>Flip</span>
                                 </a>
-                                <a
-                                    href="{{ $typingModeUrl }}"
-                                    class="study-mode-switch__option {{ $studyMode === 'typing' ? 'is-active' : '' }}"
-                                    data-study-mode-option="typing"
-                                    aria-pressed="{{ $studyMode === 'typing' ? 'true' : 'false' }}"
-                                >
+                                <a href="{{ $typingModeUrl }}" class="study-mode-switch__option {{ $studyMode === 'typing' ? 'is-active' : '' }}" data-study-mode-option="typing" aria-pressed="{{ $studyMode === 'typing' ? 'true' : 'false' }}">
                                     <span class="material-symbols-outlined">keyboard_alt</span>
-                                    <span>Nhập chữ</span>
+                                    <span>Typing</span>
                                 </a>
                             </div>
                         @endif
-                        <button class="icon-button" type="button">
-                            <span class="material-symbols-outlined">notifications</span>
-                        </button>
-                        <button class="icon-button" type="button">
-                            <span class="material-symbols-outlined">help_outline</span>
-                        </button>
-                        <div class="user-chip">
-                            <span>AL</span>
-                        </div>
+                        <div class="user-chip"><span>AL</span></div>
                     </div>
                 </header>
 
@@ -139,25 +120,30 @@
                 </main>
             </div>
         </div>
+
         <dialog id="create-deck-modal" class="custom-modal">
-        <form method="dialog" class="custom-modal__form">
-            <div class="custom-modal__header">
-                <h2>Create New Deck</h2>
-                <button type="button" class="icon-button" onclick="document.getElementById('create-deck-modal').close()">
-                    <span class="material-symbols-outlined">close</span>
-                </button>
-            </div>
-            <div class="custom-modal__body">
-                <label class="import-field">
-                    <span class="import-field__label">Deck Name</span>
-                    <input type="text" id="new-deck-name" class="import-file-input" placeholder="e.g. English Vocabulary" required autocomplete="off" />
-                </label>
-            </div>
-            <div class="custom-modal__footer">
-                <button type="button" class="secondary-button" onclick="document.getElementById('create-deck-modal').close()">Cancel</button>
-                <button type="submit" class="primary-button" id="create-deck-submit-btn">Create Deck</button>
-            </div>
-        </form>
-    </dialog>
-</body>
+            <form method="dialog" class="custom-modal__form">
+                <div class="custom-modal__header">
+                    <h2>Create New Deck</h2>
+                    <button type="button" class="icon-button" onclick="document.getElementById('create-deck-modal').close()">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="custom-modal__body">
+                    <label class="import-field">
+                        <span class="import-field__label">Deck Name</span>
+                        <input type="text" id="new-deck-name" class="import-file-input" placeholder="e.g. English Vocabulary" required autocomplete="off" />
+                    </label>
+                    <label class="import-field">
+                        <span class="import-field__label">Description</span>
+                        <textarea id="new-deck-description" class="import-file-input" rows="4" placeholder="Short description for this deck"></textarea>
+                    </label>
+                </div>
+                <div class="custom-modal__footer">
+                    <button type="button" class="secondary-button" onclick="document.getElementById('create-deck-modal').close()">Cancel</button>
+                    <button type="submit" class="primary-button" id="create-deck-submit-btn">Create Deck</button>
+                </div>
+            </form>
+        </dialog>
+    </body>
 </html>
