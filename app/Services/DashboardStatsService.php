@@ -90,7 +90,7 @@ class DashboardStatsService
     private function activeDecks(User $user, CarbonImmutable $now): array
     {
         return Deck::query()
-            ->where('user_id', $user->id)
+            ->where('decks.user_id', $user->id)
             ->leftJoin('cards', 'cards.deck_id', '=', 'decks.id')
             ->select([
                 'decks.id',
