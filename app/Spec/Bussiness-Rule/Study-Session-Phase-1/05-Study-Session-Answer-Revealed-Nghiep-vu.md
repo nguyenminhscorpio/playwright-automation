@@ -1,20 +1,28 @@
 # 05. Nghiệp vụ màn hình Study Session - Answer Revealed
 
 ## 1. Mục đích
-- Đây là màn hình hiển thị đáp án sau khi người dùng học xong một card.
-- Màn hình này dùng chung cho cả `Lật thẻ` và `Nhập chữ`.
+- Đây là màn hình hiển thị đáp án sau bước `flip` hoặc `typing`.
+- Màn hình này dùng chung cho cả 2 mode.
+- Đây là nơi người dùng đưa ra rating để hệ thống cập nhật tiến độ học.
 
 ## 2. Vai trò nghiệp vụ
-- Cho người dùng biết đáp án đúng
-- Là nơi người dùng tự đánh giá mức độ nhớ
-- Là bước chuyển tiếp để hệ thống ghi nhận kết quả học của card
+- Hiển thị prompt và đáp án đúng của card hiện tại.
+- Với mode `typing`, hiển thị thêm câu trả lời người dùng và kết quả match.
+- Là điểm duy nhất trong flow hiện tại thực hiện chấm rating, cập nhật scheduler và ghi review log.
 
 ## 3. Thành phần chính trên màn hình
-- Khu vực `Prompt`
-- Khu vực đáp án đúng
-- Khu vực `Your Answer` nếu là typing mode
-- Tag hoặc metadata phụ nếu có
-- Rating panel:
+- Thông tin deck và tiến độ.
+- Khu vực `Prompt`.
+- Khu vực `Your Answer` khi đi từ mode `typing`.
+- Khu vực judgement:
+  - `correct`
+  - `close_match`
+  - `incorrect`
+- Khu vực đáp án đúng:
+  - nhãn `Back Side` với mode `flip`
+  - nhãn `Correct Answer` với mode `typing`
+- Tag hiển thị `state` của card và `mode`.
+- Rating panel gồm:
   - `Again`
   - `Hard`
   - `Good`
@@ -22,36 +30,65 @@
 
 ## 4. Hành vi theo mode
 
-### Khi là `Lật thẻ`
-- Hiển thị prompt
-- Hiển thị mặt sau hoặc đáp án đúng
-- Không cần hiển thị `Your Answer`
-- Người dùng chuyển sang bước chấm mức độ nhớ
+### Khi là `flip`
+- Hiển thị prompt của card.
+- Hiển thị đáp án đúng ở phần `Back Side`.
+- Không hiển thị `Your Answer`.
+- Tiêu đề rating là `How difficult was this to recall?`
 
-### Khi là `Nhập chữ`
-- Hiển thị prompt
-- Hiển thị câu trả lời người dùng đã nhập
-- Hiển thị đáp án đúng
-- Về sau có thể hiển thị trạng thái `Đúng / Gần đúng / Sai`
-- Người dùng chuyển sang bước chấm mức độ nhớ
+### Khi là `typing`
+- Hiển thị prompt của card.
+- Hiển thị `Your Answer` nếu có dữ liệu đã nhập.
+- Hiển thị judgement `correct / close_match / incorrect`.
+- Hiển thị đáp án đúng ở phần `Correct Answer`.
+- Tiêu đề rating là `How well did you know this after checking?`
 
 ## 5. Luồng nghiệp vụ
-1. Hệ thống nhận kết quả từ `Flip Front` hoặc `Typing Input`
-2. Hệ thống hiển thị đáp án đúng
-3. Nếu là typing mode, hiển thị thêm `user_answer`
-4. Người dùng chọn `Again / Hard / Good / Easy`
-5. Hệ thống ghi nhận log học
-6. Hệ thống chuẩn bị card tiếp theo
+1. Màn answer đọc payload đã được lưu từ bước trước trong `sessionStorage`.
+2. Nếu không có payload hợp lệ, hệ thống hiển thị empty state `No revealed card`.
+3. Nếu có payload, hệ thống render lại card hiện tại và dữ liệu answer tương ứng.
+4. Hệ thống hiển thị thời gian gợi ý cho từng rating theo `state` hiện tại của card.
+5. Người dùng chọn một trong bốn rating `Again / Hard / Good / Easy`.
+6. Hệ thống gọi API rate với:
+   - `mode`
+   - `rating`
+   - `typed_answer` nếu có
+   - `judged_result` nếu có
+7. Hệ thống cập nhật card theo scheduler:
+   - đổi `state`
+   - đổi `current_step`
+   - đổi `due_at`
+   - đổi `scheduled_days`
+   - đổi `stability`
+   - đổi `difficulty`
+   - tăng `reps`
+   - tăng `lapses` khi phù hợp
+8. Hệ thống ghi một bản ghi `review_logs`.
+9. Hệ thống xóa payload answer tạm thời khỏi `sessionStorage`.
+10. Hệ thống điều hướng về màn học tiếp theo:
+   - về `study/front` nếu mode là `flip`
+   - về `study/typing` nếu mode là `typing`
+11. Nếu không còn card tiếp theo, hệ thống vẫn điều hướng về màn học tương ứng để render lại trạng thái `Session complete`.
 
 ## 6. Điều kiện đầu vào
-- Có card hiện tại đã đi qua bước xem hoặc nhập đáp án
-- Có mode hiện tại của session để quyết định cách render màn answer
+- Có payload answer hợp lệ được lưu từ bước trước.
+- Card hiện tại tồn tại và có thể rate được.
+- Rating được chọn phải thuộc một trong 4 giá trị: `again`, `hard`, `good`, `easy`.
 
 ## 7. Điều kiện đầu ra
-- Kết quả đánh giá của người dùng được ghi nhận
-- Hệ thống có đủ dữ liệu để cập nhật tiến độ học và lịch ôn tập
+- Card được cập nhật theo thuật toán scheduler hiện tại.
+- Review log được tạo thành công.
+- Progress session được refresh.
+- Người dùng được đưa sang card kế tiếp hoặc trạng thái kết thúc session.
 
-## 8. Kết quả mong đợi
-- Người dùng nhìn rõ đáp án đúng
-- Người dùng chấm mức độ nhớ nhanh chóng
-- Hệ thống sẵn sàng chuyển sang card tiếp theo
+## 8. Quy tắc nghiệp vụ quan trọng
+- Đây là màn duy nhất trong flow hiện tại thực sự ghi nhận kết quả học.
+- Kết quả `correct / close_match / incorrect` không tự động map sang rating.
+- Rating hint đang hiển thị theo rule UI hiện tại:
+  - với `review`: `hard ~1 day`, `good ~2 days`, `easy ~4 days`
+  - với `new/learning/relearning`: `again <1 min`, `hard ~5 min`, `good ~10 min`, `easy ~4 days`
+- Sau khi rate xong, màn answer không giữ lại card cũ.
+
+## 9. Kết quả mong đợi
+- Người dùng nhìn thấy đáp án rõ ràng trước khi tự đánh giá độ nhớ.
+- Hệ thống chỉ cập nhật scheduling sau khi người dùng chọn rating, giúp flow nhất quán cho cả `flip` và `typing`.

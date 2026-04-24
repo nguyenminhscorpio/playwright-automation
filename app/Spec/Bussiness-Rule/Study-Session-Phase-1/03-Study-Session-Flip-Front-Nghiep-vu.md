@@ -1,53 +1,73 @@
 # 03. Nghiệp vụ màn hình Study Session - Flip Front
 
 ## 1. Mục đích
-- Đây là màn hình học dành cho mode `Lật thẻ`.
-- Người dùng nhìn mặt trước của card, tự nhớ câu trả lời trong đầu, rồi mới xem đáp án.
+- Đây là màn hình học dành cho mode `flip`.
+- Người dùng chỉ nhìn mặt trước của card, tự nhớ đáp án, rồi bấm `Show Answer` để chuyển sang màn đánh giá.
 
 ## 2. Vai trò nghiệp vụ
-- Là điểm bắt đầu của flow học kiểu flashcard truyền thống.
-- Giúp người dùng tự đánh giá khả năng nhớ trước khi thấy đáp án.
-- Giữ cho trải nghiệm học nhanh, ít thao tác và tập trung vào ghi nhớ.
+- Là điểm bắt đầu của flow học kiểu lật thẻ.
+- Giúp người dùng tự recall trước khi thấy đáp án.
+- Chưa chấm điểm, chưa cập nhật lịch học, chưa ghi review log ở màn này.
 
 ## 3. Thành phần chính trên màn hình
-- Session progress
-- Progress bar
-- Card mặt trước
-- Chip trạng thái như `New Concept`
-- Icon TTS
-- Nút `Show Answer`
-- Topbar có mode switch
+- Tên deck hiện tại.
+- Thông tin tiến độ session:
+  - `Card X of Y`
+  - `Reviewed`
+  - progress bar
+- Nội dung mặt trước của card.
+- Nhãn trạng thái card: `New Card`, `Learning`, `Review`, `Relearning`.
+- Nút TTS.
+- Nút `Show Answer`.
+- Topbar có mode switch giữa `flip` và `typing`.
 
-## 4. Dữ liệu cần hiển thị
-- Tên deck hoặc nhóm nội dung
-- Tổng số card trong session
-- Số card đã đi qua
-- Nội dung mặt trước của card
-- Trạng thái card như `new`, `learning`, `review`
+## 4. Dữ liệu hiển thị
+- `deck_name`
+- `front_text` hoặc `front_plain_text`
+- `state`
+- `progress.total`
+- `progress.completed`
+- `progress.remaining`
 
 ## 5. Hành vi người dùng
-- Xem nội dung card ở mặt trước
-- Nghe phát âm bằng TTS nếu cần
-- Tự nhớ nghĩa hoặc câu trả lời
-- Bấm `Show Answer` để xem đáp án
-- Có thể đổi sang mode `Nhập chữ` tại topbar
+- Xem nội dung mặt trước của card hiện tại.
+- Có thể bấm nút TTS để gửi request phát âm.
+- Có thể đổi mode sang `typing` bằng mode switch.
+- Bấm `Show Answer` để sang màn `Answer Revealed`.
 
 ## 6. Luồng nghiệp vụ
-1. Người dùng vào Study Session khi mode hiện tại là `Lật thẻ`
-2. Hệ thống hiển thị màn `Flip Front`
-3. Người dùng quan sát nội dung card
-4. Người dùng có thể dùng TTS để nghe phát âm
-5. Người dùng bấm `Show Answer`
-6. Hệ thống chuyển sang màn `Answer Revealed`
+1. Người dùng mở Study Session ở mode `flip`.
+2. Hệ thống gọi API session với `mode=flip`.
+3. Hệ thống chọn 1 card hiện tại theo thứ tự ưu tiên:
+   - `relearning` đến hạn
+   - `review` đến hạn
+   - `learning` đến hạn
+   - nếu không có card đến hạn thì lấy card `new`
+4. Hệ thống render màn `Flip Front` với mặt trước của card.
+5. Người dùng quan sát câu hỏi hoặc nội dung cần nhớ.
+6. Nếu bấm TTS, hệ thống gọi endpoint TTS và hiện thông báo scaffold, chưa phát âm thật ở phase hiện tại.
+7. Khi bấm `Show Answer`, hệ thống lưu tạm payload của card hiện tại vào `sessionStorage`.
+8. Hệ thống chuyển sang màn `Answer Revealed`.
 
 ## 7. Điều kiện đầu vào
-- Có ít nhất 1 card cần học trong session
-- Mode hiện tại của session là `flip`
+- Có `user_id` hợp lệ để build study session.
+- Có ít nhất 1 card khả dụng trong phạm vi deck đang học hoặc toàn bộ deck.
+- Mode hiện tại là `flip`.
 
 ## 8. Điều kiện đầu ra
-- Hệ thống chuyển sang màn hình hiển thị đáp án
-- Card hiện tại vẫn là card đang được xử lý cho đến khi người dùng chấm `Again / Hard / Good / Easy`
+- Nếu có card:
+  - người dùng được chuyển sang màn `Answer Revealed`
+  - payload của card hiện tại được lưu tạm để màn answer dùng lại
+- Nếu không có card:
+  - màn hình hiển thị trạng thái `Session complete`
+  - không có hành vi reveal tiếp theo
 
-## 9. Kết quả mong đợi
-- Người dùng tập trung vào việc nhớ trước khi nhìn đáp án
-- Flow học rõ ràng và đúng với hành vi flashcard
+## 9. Quy tắc nghiệp vụ quan trọng
+- Màn này không kiểm tra đáp án.
+- Màn này không cập nhật `state`, `due_at`, `stability`, `difficulty`.
+- Màn này không ghi `review_logs`.
+- `Answer Revealed` mới là nơi người dùng chọn `Again / Hard / Good / Easy`.
+
+## 10. Kết quả mong đợi
+- Người dùng có một bước recall rõ ràng trước khi xem đáp án.
+- Flow `flip -> answer` đơn giản, nhanh và đúng với hành vi flashcard cơ bản.
