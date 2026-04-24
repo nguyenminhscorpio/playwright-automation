@@ -73,7 +73,7 @@
                         <span class="material-symbols-outlined">dashboard</span>
                         <span>Dashboard</span>
                     </a>
-                    <a href="{{ route('decks.show', 'english-vocabulary') }}" class="nav__link {{ request()->routeIs('decks.*') ? 'is-active' : '' }}">
+                    <a href="{{ route('decks.show', 1) }}" class="nav__link {{ request()->routeIs('decks.*') ? 'is-active' : '' }}">
                         <span class="material-symbols-outlined">layers</span>
                         <span>My Decks</span>
                     </a>
