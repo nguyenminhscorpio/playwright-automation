@@ -328,7 +328,55 @@ Ví dụ:
 - `difficulty_after`
 - `reviewed_at`
 
-## 19. Kết luận
+## 19. Rule chốt thêm cho phase hiện tại
+
+### 19.1. Cách xử lý `Hard` trong `Learning`
+- `Hard` không làm tăng step
+- card vẫn ở step hiện tại
+- `due_at` phải ngắn hơn `Good`
+- rule mặc định phase này:
+  - learning step `1 phút` -> `Hard` vẫn due `1 phút`
+  - learning step `10 phút` -> `Hard` due `5 phút`
+
+Mục tiêu:
+- không cho card graduate quá sớm
+- vẫn giữ đúng tinh thần `Hard` là nhớ khó, chưa chắc chắn như `Good`
+
+### 19.2. Cách xử lý `Hard` trong `Relearning`
+- `Hard` không làm tăng step
+- card vẫn ở `Relearning`
+- với cấu hình mặc định `10 phút`, `Hard` due `5 phút`
+
+### 19.3. Session không lưu bền riêng trong DB ở phase này
+- `GET /api/study/session` được dựng động từ các card hiện có
+- chưa cần tạo bảng session riêng
+- dữ liệu được lấy từ card state + due + mode hiện tại
+
+### 19.4. Quy tắc chọn card trong session của phase này
+- ưu tiên `Relearning`
+- sau đó đến `Review` đã đến hạn
+- sau đó đến `Learning` đã đến hạn
+- chỉ lấy `New` khi không còn card due/learning hoặc theo quota cấu hình
+- nếu không còn card phù hợp thì kết thúc session
+
+### 19.5. Đổi mode giữa chừng
+- mode là thuộc tính của toàn session
+- khi người dùng đổi mode ở topbar:
+  - giữ nguyên `current_card`
+  - chỉ đổi cách render và luồng màn hình
+- nếu đang ở `Answer Revealed` thì không reset card hiện tại
+- mode mới được áp dụng rõ ràng nhất từ card kế tiếp
+
+### 19.6. Giá trị khởi tạo `stability` và `difficulty`
+Để tránh lệch dữ liệu khi nâng cấp FSRS về sau, phase hiện tại chốt mặc định:
+- `stability = 1.0`
+- `difficulty = 5.0`
+
+Áp dụng:
+- khi tạo card mới có thể set sẵn giá trị mặc định này
+- khi card graduate sang `Review`, nếu chưa có giá trị thì gán các giá trị mặc định trên
+
+## 20. Kết luận
 Logic chuẩn cần thống nhất là:
 - `Learning` dùng step ngắn, chưa dùng FSRS
 - `Review` mới dùng FSRS

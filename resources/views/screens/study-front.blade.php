@@ -3,49 +3,48 @@
 @php($studyScreen = 'front')
 
 @section('content')
-    @php($mode = request('mode', 'flip'))
-    @php($typingMode = $mode === 'typing')
     <section class="study-page">
-        <div class="study-shell">
+        <div class="study-shell" data-study-app>
             <div class="study-progress">
                 <div>
-                    <span class="eyebrow">English Vocabulary</span>
-                    <h1 class="study-title">Session Progress</h1>
+                    <span class="eyebrow" data-study-deck-name>{{ $studyDeckName ?? 'Study Session' }}</span>
+                    <h1 class="study-title" data-study-progress-title>Session Progress</h1>
                 </div>
-                <span class="progress-pill">12 / 50 Mastered</span>
+                <span class="progress-pill" data-study-progress-pill>0 / 0 Reviewed</span>
             </div>
 
-            <div class="progress">
-                <div class="progress__bar" style="width: 24%"></div>
+            <div class="study-feedback is-hidden" data-study-feedback></div>
+
+            <div class="progress" aria-hidden="true">
+                <div class="progress__bar" data-study-progress-bar style="width: 0%"></div>
             </div>
 
-            <article class="study-card study-card--front">
-                <div class="study-chip">
+            <article class="study-card study-card--front" data-study-card>
+                <div class="study-chip" data-study-state-chip>
                     <span class="material-symbols-outlined">psychology</span>
-                    <span>New Concept</span>
+                    <span data-study-state-label>Loading card</span>
                 </div>
-                <button class="icon-button study-card__tts" type="button">
+                <button class="icon-button study-card__tts" type="button" data-study-tts-button disabled>
                     <span class="material-symbols-outlined">volume_up</span>
                 </button>
 
                 <div class="study-card__content">
-                    <h2>air conditioning</h2>
-                    <p>(thiết bị điều hòa không khí)</p>
+                    <h2 data-study-front-text>Loading...</h2>
+                    <p data-study-front-plain-text>Preparing study card.</p>
                 </div>
             </article>
 
+            <section class="study-empty-state is-hidden" data-study-empty-state>
+                <span class="material-symbols-outlined">check_circle</span>
+                <h2 data-study-empty-title>Session complete</h2>
+                <p data-study-empty-message>No cards are ready right now. Try again later or switch deck.</p>
+            </section>
+
             <div class="study-actions study-actions--center">
-                @if ($typingMode)
-                    <a href="{{ route('study.typing', ['mode' => 'typing']) }}" class="primary-button primary-button--pill">
-                        <span class="material-symbols-outlined">edit_note</span>
-                        <span>Bắt đầu nhập chữ</span>
-                    </a>
-                @else
-                    <a href="{{ route('study.answer', ['mode' => 'flip']) }}" class="primary-button primary-button--pill">
-                        <span class="material-symbols-outlined">visibility</span>
-                        <span>Show Answer</span>
-                    </a>
-                @endif
+                <button class="primary-button primary-button--pill" type="button" data-study-reveal-button disabled>
+                    <span class="material-symbols-outlined">visibility</span>
+                    <span>Show Answer</span>
+                </button>
             </div>
         </div>
     </section>

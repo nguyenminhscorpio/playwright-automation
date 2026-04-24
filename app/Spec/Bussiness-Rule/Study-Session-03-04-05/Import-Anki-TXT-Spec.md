@@ -119,7 +119,33 @@ Nếu không đủ:
 - `front_text` là câu hỏi
 - `back_text` là đáp án chuẩn để so sánh
 
-## 13. Những gì chưa làm ở giai đoạn này
+## 13. Rule chốt thêm cho preview / confirm / duplicate
+
+### 13.1. Preview và Confirm phải nhất quán dữ liệu
+- sau khi preview, hệ thống phải lưu snapshot kết quả parse của file
+- confirm import phải dùng lại snapshot này
+- không parse lại file trong lúc confirm nếu không có lý do đặc biệt
+- mỗi preview nên gắn với `file_hash` để bảo đảm file không bị đổi giữa preview và confirm
+- nếu `file_hash` không khớp thì bắt buộc preview lại
+
+### 13.2. Rule duplicate của phase hiện tại
+- duplicate được xác định trong phạm vi:
+  - `user`
+  - `deck`
+  - `front_text` đã normalize
+  - `back_text` đã normalize
+- không dùng `source_file + source_line_number` làm khóa duplicate chính
+- nếu dòng bị trùng:
+  - không insert card mới
+  - đánh dấu `skip`
+  - vẫn ghi log vào import history
+
+### 13.3. Text dùng cho checking về sau
+- `back_text` dùng để hiển thị
+- cần sinh thêm phiên bản plain text sạch để phục vụ `check-answer`
+- plain text này phải được tạo ngay từ bước import
+
+## 14. Những gì chưa làm ở giai đoạn này
 - chưa lưu audio
 - chưa lưu image
 - chưa lưu tags
@@ -127,7 +153,7 @@ Nếu không đủ:
 - chưa tách phiên âm riêng
 - chưa hỗ trợ các schema import nâng cao
 
-## 14. Kết luận
+## 15. Kết luận
 Spec import TXT hiện tại đã được chốt theo hướng tối giản:
 - bỏ `mp3`
 - bỏ `image`

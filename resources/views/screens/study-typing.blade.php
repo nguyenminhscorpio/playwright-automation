@@ -4,36 +4,45 @@
 
 @section('content')
     <section class="study-page">
-        <div class="study-shell">
+        <div class="study-shell" data-study-app>
             <div class="study-progress study-progress--compact">
                 <div class="progress-block__meta">
-                    <span>Current Deck Progress</span>
-                    <strong>15 / 50</strong>
+                    <span data-study-deck-name>{{ $studyDeckName ?? 'Current Deck' }}</span>
+                    <strong data-study-progress-compact>0 / 0</strong>
                 </div>
                 <div class="progress">
-                    <div class="progress__bar" style="width: 30%"></div>
+                    <div class="progress__bar" data-study-progress-bar style="width: 0%"></div>
                 </div>
             </div>
 
-            <article class="study-card study-card--typing">
+            <div class="study-feedback is-hidden" data-study-feedback></div>
+
+            <article class="study-card study-card--typing" data-study-card>
                 <span class="study-side-label">Front side</span>
                 <div class="study-card__content">
-                    <h2>Define: Spaced Repetition</h2>
+                    <h2 data-study-front-text>Loading...</h2>
+                    <p data-study-front-plain-text>Preparing study card.</p>
                 </div>
             </article>
 
+            <section class="study-empty-state is-hidden" data-study-empty-state>
+                <span class="material-symbols-outlined">check_circle</span>
+                <h2 data-study-empty-title>Session complete</h2>
+                <p data-study-empty-message>No cards are ready right now. Try again later or switch deck.</p>
+            </section>
+
             <section class="answer-panel">
                 <label for="answer-input" class="answer-panel__label">Your Answer</label>
-                <textarea id="answer-input" class="answer-panel__input" rows="5" placeholder="Type your explanation here..."></textarea>
+                <textarea id="answer-input" class="answer-panel__input" rows="5" placeholder="Type your answer here..." data-study-answer-input></textarea>
                 <div class="answer-panel__actions">
-                    <button class="text-button" type="button">
+                    <button class="text-button" type="button" data-study-hint-button disabled>
                         <span class="material-symbols-outlined">lightbulb</span>
                         <span>Show Hint</span>
                     </button>
-                    <a href="{{ route('study.answer', ['mode' => 'typing']) }}" class="primary-button">
+                    <button class="primary-button" type="button" data-study-check-button disabled>
                         <span>Check Answer</span>
                         <span class="material-symbols-outlined">keyboard_return</span>
-                    </a>
+                    </button>
                 </div>
             </section>
         </div>

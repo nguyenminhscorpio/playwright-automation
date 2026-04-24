@@ -14,25 +14,39 @@
     </head>
     @php($isStudyPage = request()->routeIs('study.*'))
     @php($studyMode = request('mode', 'flip'))
+    @php($studyRouteVersion = 'study-v2')
+    @php($studyDeckQuery = array_filter([
+        'deck_id' => request('deck_id'),
+        'sv' => $studyRouteVersion,
+    ], fn ($value) => $value !== null && $value !== ''))
     @php($currentStudyScreen = $studyScreen ?? 'front')
     @php($flipModeUrl = match ($currentStudyScreen) {
-        'typing' => route('study.front', ['mode' => 'flip']),
-        'answer' => route('study.answer', ['mode' => 'flip']),
-        default => route('study.front', ['mode' => 'flip']),
+        'typing' => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
+        'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'flip']),
+        default => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
     })
     @php($typingModeUrl = match ($currentStudyScreen) {
-        'typing' => route('study.typing', ['mode' => 'typing']),
-        'answer' => route('study.answer', ['mode' => 'typing']),
-        default => route('study.typing', ['mode' => 'typing']),
+        'typing' => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
+        'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'typing']),
+        default => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
     })
     <body
         class="app-body"
         data-page="{{ $page ?? 'default' }}"
         data-study-screen="{{ $studyScreen ?? '' }}"
         data-study-mode="{{ $studyMode }}"
-        data-study-front-url="{{ route('study.front') }}"
-        data-study-typing-url="{{ route('study.typing') }}"
-        data-study-answer-url="{{ route('study.answer') }}"
+        data-study-user-id="{{ $studyUserId ?? '' }}"
+        data-study-deck-id="{{ $studyDeckId ?? '' }}"
+        data-study-deck-name="{{ $studyDeckName ?? '' }}"
+        data-study-front-url="{{ route('study.front', $studyDeckQuery) }}"
+        data-study-typing-url="{{ route('study.typing', $studyDeckQuery) }}"
+        data-study-answer-url="{{ route('study.answer', $studyDeckQuery) }}"
+        data-study-session-api-url="{{ url('/api/study/session') }}"
+        data-study-check-answer-url-template="{{ url('/api/study/cards/__CARD__/check-answer') }}"
+        data-study-rate-url-template="{{ url('/api/study/cards/__CARD__/rate') }}"
+        data-study-tts-url-template="{{ url('/api/study/cards/__CARD__/play-tts') }}"
+        data-import-preview-url="{{ url('/api/imports/txt/preview') }}"
+        data-import-confirm-url="{{ url('/api/imports/txt/confirm') }}"
     >
         <div class="app-shell">
             <aside class="sidebar">
@@ -53,9 +67,13 @@
                         <span class="material-symbols-outlined">layers</span>
                         <span>My Decks</span>
                     </a>
-                    <a href="{{ route('study.front') }}" class="nav__link {{ request()->routeIs('study.*') ? 'is-active' : '' }}">
+                    <a href="{{ route('study.front', ['sv' => $studyRouteVersion]) }}" class="nav__link {{ request()->routeIs('study.*') ? 'is-active' : '' }}">
                         <span class="material-symbols-outlined">school</span>
                         <span>Study Session</span>
+                    </a>
+                    <a href="{{ route('imports.index') }}" class="nav__link {{ request()->routeIs('imports.*') ? 'is-active' : '' }}">
+                        <span class="material-symbols-outlined">upload_file</span>
+                        <span>Import</span>
                     </a>
                     <a href="#" class="nav__link">
                         <span class="material-symbols-outlined">bar_chart</span>

@@ -92,6 +92,12 @@
   - so sánh với back side plain text
   - trả về `correct`, `close_match`, `incorrect`
 
+### Rule chốt cho phase hiện tại
+- nguồn chuẩn để so sánh là `back_plain_text`
+- `close_match` dùng ngưỡng mặc định `0.85`
+- kết quả chấm chỉ là dữ liệu hỗ trợ
+- quyết định cuối cùng để đổi phase và tính lịch vẫn là rating người dùng chọn
+
 ## 10. TTS
 - Có icon loa trên study card.
 - Dùng để đọc từ/câu tiếng Anh.

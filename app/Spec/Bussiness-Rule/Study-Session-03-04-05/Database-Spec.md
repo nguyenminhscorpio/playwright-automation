@@ -4,6 +4,10 @@
 - Tài liệu giữ khung tổng thể cho toàn hệ thống
 - Không thu gọn chỉ vì phase hiện tại chưa dùng hết
 - Với các phần chưa dùng ở phase hiện tại, sẽ ghi rõ `Future Phase`
+- Phần study phải khớp với mô hình:
+  - `Learning`
+  - `Review`
+  - `Relearning`
 
 ## 2. users
 - `id`
@@ -50,12 +54,17 @@
 - Với rule import hiện tại, dữ liệu thực dùng chủ yếu là:
   - `front_text`
   - `back_text`
+  - `back_plain_text`
   - `source_file_name`
   - `source_raw_line`
 
+### Rule chốt thêm
+- `back_plain_text` là nguồn chuẩn để dùng cho `check-answer`
+- `back_text` giữ vai trò hiển thị cho UI
+- `front_plain_text` và `back_plain_text` nên được sinh ngay ở bước import hoặc khi tạo card thủ công
+
 ### Ghi chú
 - `note_text` có thể giữ để phục vụ mở rộng về sau
-- không mâu thuẫn với phase hiện tại
 
 ## 5. cards
 - `id`
@@ -63,6 +72,9 @@
 - `user_id`
 - `deck_id`
 - `state`
+- `current_step`
+- `learning_steps_json`
+- `relearning_steps_json`
 - `due_at`
 - `last_reviewed_at`
 - `stability`
@@ -76,19 +88,39 @@
 - `created_at`
 - `updated_at`
 
-### Ghi chú
-- bảng này cần cho FSRS và study session sau này
-- giữ nguyên khung
+### Giải thích các field mới quan trọng
+- `state`
+  - `new`
+  - `learning`
+  - `review`
+  - `relearning`
+  - `suspended`
+- `current_step`
+  - step hiện tại trong `Learning` hoặc `Relearning`
+- `learning_steps_json`
+  - ví dụ: `[1, 10]` tính theo phút
+- `relearning_steps_json`
+  - ví dụ: `[10]` tính theo phút
+
+### Current Phase
+- Đây là bảng quan trọng nhất để nối UI với logic Anki-like
+- phase hiện tại chốt giá trị mặc định:
+  - `stability = 1.0`
+  - `difficulty = 5.0`
+- nếu card mới chưa dùng tới review thật, vẫn có thể set sẵn 2 giá trị này để dữ liệu ổn định cho lần nâng cấp FSRS sau
 
 ## 6. review_logs
 - `id`
 - `user_id`
 - `card_id`
+- `mode`
 - `rating`
 - `typed_answer`
 - `judged_result`
 - `previous_state`
 - `next_state`
+- `previous_step`
+- `next_step`
 - `previous_due_at`
 - `next_due_at`
 - `previous_stability`
@@ -100,6 +132,9 @@
 ### Current Phase
 - `typed_answer` chỉ có ý nghĩa khi mode là `typing`
 - `judged_result` phục vụ so sánh đáp án nhập chữ
+- `previous_step` và `next_step` cần để theo dõi:
+  - learning
+  - relearning
 
 ## 7. import_jobs
 - `id`
@@ -107,6 +142,7 @@
 - `deck_id`
 - `file_name`
 - `file_path`
+- `file_hash`
 - `status`
 - `total_rows`
 - `success_rows`
@@ -120,6 +156,7 @@
   - upload file
   - preview
   - confirm import
+- `file_hash` dùng để bảo đảm confirm import bám đúng snapshot preview
 
 ## 8. import_job_rows
 - `id`
