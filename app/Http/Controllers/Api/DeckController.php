@@ -24,7 +24,13 @@ class DeckController extends Controller
                 'cards as learned_count' => fn ($query) => $query->where('state', '<>', 'new'),
                 'cards as due_count' => fn ($query) => $query->where(function ($nestedQuery) use ($now): void {
                     $nestedQuery
-                        ->whereIn('state', ['learning', 'relearning'])
+                        ->where(function ($lrQuery) use ($now): void {
+                            $lrQuery
+                                ->whereIn('state', ['learning', 'relearning'])
+                                ->where(function ($dueQuery) use ($now): void {
+                                    $dueQuery->whereNull('due_at')->orWhere('due_at', '<=', $now);
+                                });
+                        })
                         ->orWhere(function ($reviewQuery) use ($now): void {
                             $reviewQuery
                                 ->where('state', 'review')

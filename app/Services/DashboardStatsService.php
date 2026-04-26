@@ -26,7 +26,13 @@ class DashboardStatsService
                 'due_count' => $user->cards()
                     ->where(function ($query) use ($now): void {
                         $query
-                            ->whereIn('state', ['learning', 'relearning'])
+                            ->where(function ($lrQuery) use ($now): void {
+                                $lrQuery
+                                    ->whereIn('state', ['learning', 'relearning'])
+                                    ->where(function ($dueQuery) use ($now): void {
+                                        $dueQuery->whereNull('due_at')->orWhere('due_at', '<=', $now);
+                                    });
+                            })
                             ->orWhere(function ($reviewQuery) use ($now): void {
                                 $reviewQuery
                                     ->where('state', 'review')
@@ -99,9 +105,10 @@ class DashboardStatsService
                 DB::raw('count(cards.id) as total_count'),
                 DB::raw("sum(case when cards.state <> 'new' then 1 else 0 end) as learned_count"),
                 DB::raw("sum(case when cards.state = 'review' then 1 else 0 end) as review_count"),
-                DB::raw("sum(case when cards.state in ('learning', 'relearning') or (cards.state = 'review' and cards.due_at <= '" . $now->toDateTimeString() . "') then 1 else 0 end) as due_count"),
+                DB::raw("sum(case when (cards.state in ('learning', 'relearning') and (cards.due_at is null or cards.due_at <= ?)) or (cards.state = 'review' and cards.due_at <= ?) then 1 else 0 end) as due_count"),
                 DB::raw('max(cards.last_reviewed_at) as last_reviewed_at'),
             ])
+            ->setBindings([$now->toDateTimeString(), $now->toDateTimeString()], 'select')
             ->groupBy('decks.id', 'decks.name', 'decks.description')
             ->orderByDesc('due_count')
             ->orderByDesc('last_reviewed_at')

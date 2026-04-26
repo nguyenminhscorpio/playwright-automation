@@ -374,7 +374,41 @@ const setupStudy = async () => {
     };
 
     const session = await fetchJson(sessionUrl.toString()).catch(() => null);
-    if (!session?.current_card) return;
+
+    if (session?.progress) {
+        setText('[data-study-new-count]', session.progress.new);
+        setText('[data-study-learning-count]', session.progress.learning);
+        setText('[data-study-review-count]', session.progress.review);
+
+        const compact = document.querySelector('[data-study-progress-compact]');
+        if (compact) {
+            compact.textContent = `${session.progress.completed} / ${session.progress.total}`;
+        }
+
+        const progressBar = document.querySelector('[data-study-progress-bar]');
+        if (progressBar) {
+            const percent = session.progress.total > 0 ? (session.progress.completed / session.progress.total) * 100 : 100;
+            progressBar.style.width = `${percent}%`;
+        }
+    }
+
+    if (!session?.current_card) {
+        const hide = (sel) => document.querySelectorAll(sel).forEach(el => {
+            el.classList.add('is-hidden');
+            el.style.display = 'none';
+        });
+        hide('[data-study-card]');
+        hide('.rating-panel');
+        hide('.answer-panel');
+        hide('.study-actions');
+        
+        const emptyState = document.querySelector('[data-study-empty-state]');
+        if (emptyState) {
+            emptyState.classList.remove('is-hidden');
+            emptyState.style.display = 'block';
+        }
+        return;
+    }
 
     const card = session.current_card;
     setText('[data-study-front-text]', card.front_text || card.front_plain_text || 'Untitled card');
@@ -382,12 +416,6 @@ const setupStudy = async () => {
     setText('[data-study-state-label]', card.state || 'Card');
     setText('[data-study-state-tag]', card.state || 'Card');
     setText('[data-study-mode-tag]', `Mode: ${session.mode}`);
-
-    if (session.progress) {
-        setText('[data-study-new-count]', session.progress.new);
-        setText('[data-study-learning-count]', session.progress.learning);
-        setText('[data-study-review-count]', session.progress.review);
-    }
 
     document.querySelectorAll('[data-study-tts-button]').forEach((button) => {
         button.disabled = false;
