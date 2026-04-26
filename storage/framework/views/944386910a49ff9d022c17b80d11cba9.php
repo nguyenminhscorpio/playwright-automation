@@ -1,21 +1,19 @@
-@extends('layouts.app', ['page' => 'deck-detail'])
-
-@section('content')
-<div class="deck-detail-container" data-deck-detail-app data-deck-id="{{ $deck->id }}" data-user-id="{{ $deckDetailUserId ?? '' }}" data-total-cards="{{ $cards->total() }}">
+<?php $__env->startSection('content'); ?>
+<div class="deck-detail-container" data-deck-detail-app data-deck-id="<?php echo e($deck->id); ?>" data-user-id="<?php echo e($deckDetailUserId ?? ''); ?>" data-total-cards="<?php echo e($cards->total()); ?>">
     <div class="breadcrumb">
-        <a href="{{ route('dashboard') }}">My Decks</a>
+        <a href="<?php echo e(route('dashboard')); ?>">My Decks</a>
         <span>/</span>
         <select class="deck-switcher" data-deck-switcher>
-            @foreach ($allDecks as $d)
-                <option value="{{ $d->id }}" @selected($d->id === $deck->id)>{{ $d->name }}</option>
-            @endforeach
+            <?php $__currentLoopData = $allDecks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $d): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <option value="<?php echo e($d->id); ?>" <?php if($d->id === $deck->id): echo 'selected'; endif; ?>><?php echo e($d->name); ?></option>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </select>
     </div>
 
     <div class="card-manager-header">
         <div>
-            <h1 class="card-manager-title">Card Management <span class="card-manager-deck-badge">{{ $deck->name }}</span></h1>
-            <p class="hero__subtitle">{{ $deck->description ?: 'Manage cards, search quickly, and jump into import for this deck.' }}</p>
+            <h1 class="card-manager-title">Card Management <span class="card-manager-deck-badge"><?php echo e($deck->name); ?></span></h1>
+            <p class="hero__subtitle"><?php echo e($deck->description ?: 'Manage cards, search quickly, and jump into import for this deck.'); ?></p>
         </div>
         <div class="toolbar-actions">
             <button class="secondary-button text-danger is-hidden" type="button" data-action-bulk-delete>
@@ -26,24 +24,24 @@
                 <span class="material-symbols-outlined">add</span>
                 <span>Create Card</span>
             </button>
-            <a href="{{ route('imports.index', ['deck_id' => $deck->id]) }}" class="secondary-button">
+            <a href="<?php echo e(route('imports.index', ['deck_id' => $deck->id])); ?>" class="secondary-button">
                 <span class="material-symbols-outlined">upload_file</span>
                 <span>Import</span>
             </a>
         </div>
     </div>
 
-    <form method="GET" action="{{ route('decks.show', $deck) }}" class="card-manager-toolbar">
+    <form method="GET" action="<?php echo e(route('decks.show', $deck)); ?>" class="card-manager-toolbar">
         <div class="toolbar-filters toolbar-filters--grow">
             <label class="toolbar-search">
                 <span class="material-symbols-outlined">search</span>
-                <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Search cards by front, back, or description..." />
+                <input type="text" name="q" value="<?php echo e($filters['q'] ?? ''); ?>" placeholder="Search cards by front, back, or description..." />
             </label>
             <select class="import-select toolbar-select" name="status">
-                <option value="all" @selected(($filters['status'] ?? 'all') === 'all')>Any Status</option>
-                <option value="learning" @selected(($filters['status'] ?? '') === 'learning')>Learning</option>
-                <option value="review" @selected(($filters['status'] ?? '') === 'review')>Review</option>
-                <option value="new" @selected(($filters['status'] ?? '') === 'new')>New</option>
+                <option value="all" <?php if(($filters['status'] ?? 'all') === 'all'): echo 'selected'; endif; ?>>Any Status</option>
+                <option value="learning" <?php if(($filters['status'] ?? '') === 'learning'): echo 'selected'; endif; ?>>Learning</option>
+                <option value="review" <?php if(($filters['status'] ?? '') === 'review'): echo 'selected'; endif; ?>>Review</option>
+                <option value="new" <?php if(($filters['status'] ?? '') === 'new'): echo 'selected'; endif; ?>>New</option>
             </select>
         </div>
         <div class="toolbar-actions">
@@ -70,66 +68,67 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($cards as $card)
-                    <tr data-card-row data-card-id="{{ $card->id }}">
-                        <td class="col-checkbox"><input type="checkbox" aria-label="Select card" data-row-checkbox value="{{ $card->id }}"></td>
-                        <td class="col-front"><strong>{{ $card->note->front_plain_text ?? $card->note->front_text }}</strong></td>
-                        <td class="col-back">{{ \Illuminate\Support\Str::limit($card->note->back_plain_text ?? '', 50) }}</td>
+                <?php $__empty_1 = true; $__currentLoopData = $cards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $card): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <tr data-card-row data-card-id="<?php echo e($card->id); ?>">
+                        <td class="col-checkbox"><input type="checkbox" aria-label="Select card" data-row-checkbox value="<?php echo e($card->id); ?>"></td>
+                        <td class="col-front"><strong><?php echo e($card->note->front_plain_text ?? $card->note->front_text); ?></strong></td>
+                        <td class="col-back"><?php echo e(\Illuminate\Support\Str::limit($card->note->back_plain_text ?? '', 50)); ?></td>
 
                         <td class="col-status">
-                            @if($card->state === 'review')
+                            <?php if($card->state === 'review'): ?>
                                 <span class="badge badge--success"><span class="badge-dot"></span> Review</span>
-                            @elseif($card->state === 'learning' || $card->state === 'relearning')
+                            <?php elseif($card->state === 'learning' || $card->state === 'relearning'): ?>
                                 <span class="badge badge--warning"><span class="badge-dot"></span> Learning</span>
-                            @else
+                            <?php else: ?>
                                 <span class="badge badge--neutral"><span class="badge-dot"></span> New</span>
-                            @endif
+                            <?php endif; ?>
                         </td>
-                        <td class="col-last-reviewed">{{ $card->last_reviewed_at?->diffForHumans() ?? 'Never' }}</td>
+                        <td class="col-last-reviewed"><?php echo e($card->last_reviewed_at?->diffForHumans() ?? 'Never'); ?></td>
                         <td class="col-mastery">
                             <div class="mastery-bar">
-                                @php($masteryPercent = $card->state === 'review' ? min(100, (int) round($card->stability * 10)) : ($card->state === 'new' ? 0 : 20))
-                                <div class="mastery-bar__fill" style="width: {{ $masteryPercent }}%"></div>
+                                <?php ($masteryPercent = $card->state === 'review' ? min(100, (int) round($card->stability * 10)) : ($card->state === 'new' ? 0 : 20)); ?>
+                                <div class="mastery-bar__fill" style="width: <?php echo e($masteryPercent); ?>%"></div>
                             </div>
                         </td>
                         <td class="col-next">
-                            @if(!$card->due_at)
+                            <?php if(!$card->due_at): ?>
                                 -
-                            @else
-                                @php($now = now())
-                                @php($diffDays = (int) $now->startOfDay()->diffInDays($card->due_at->startOfDay(), false))
+                            <?php else: ?>
+                                <?php ($now = now()); ?>
+                                <?php ($diffDays = (int) $now->startOfDay()->diffInDays($card->due_at->startOfDay(), false)); ?>
                                 
-                                @if($diffDays < 0 || ($diffDays == 0 && $card->due_at->isPast()))
+                                <?php if($diffDays < 0 || ($diffDays == 0 && $card->due_at->isPast())): ?>
                                     <span style="color: var(--danger); font-weight: 700;">Today</span>
-                                @elseif($diffDays == 0)
-                                    @php($diffMins = $now->diffInMinutes($card->due_at))
-                                    @if($diffMins < 60)
-                                        <span style="color: var(--warning); font-weight: 600;">In {{ $diffMins }}m</span>
-                                    @else
-                                        <span style="color: var(--warning); font-weight: 600;">In {{ (int)($diffMins/60) }}h</span>
-                                    @endif
-                                @else
-                                    In {{ $diffDays }} {{ \Illuminate\Support\Str::plural('day', $diffDays) }}
-                                @endif
-                            @endif
+                                <?php elseif($diffDays == 0): ?>
+                                    <?php ($diffMins = $now->diffInMinutes($card->due_at)); ?>
+                                    <?php if($diffMins < 60): ?>
+                                        <span style="color: var(--warning); font-weight: 600;">In <?php echo e($diffMins); ?>m</span>
+                                    <?php else: ?>
+                                        <span style="color: var(--warning); font-weight: 600;">In <?php echo e((int)($diffMins/60)); ?>h</span>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    In <?php echo e($diffDays); ?> <?php echo e(\Illuminate\Support\Str::plural('day', $diffDays)); ?>
+
+                                <?php endif; ?>
+                            <?php endif; ?>
                         </td>
                         <td class="col-actions">
                             <div class="table-actions">
-                                <button class="icon-button icon-button--small action-edit" type="button" data-edit-card-button data-card-front="{{ e($card->note->front_text ?? $card->note->front_plain_text ?? '') }}" data-card-back="{{ e($card->note->back_text ?? $card->note->back_plain_text ?? '') }}" aria-label="Edit card"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="icon-button icon-button--small action-edit" type="button" data-edit-card-button data-card-front="<?php echo e(e($card->note->front_text ?? $card->note->front_plain_text ?? '')); ?>" data-card-back="<?php echo e(e($card->note->back_text ?? $card->note->back_plain_text ?? '')); ?>" aria-label="Edit card"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="icon-button icon-button--small action-delete" type="button" data-delete-card-button aria-label="Delete card"><span class="material-symbols-outlined">delete</span></button>
                             </div>
                         </td>
                     </tr>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr><td colspan="8" class="empty-state-row">No cards found for the current search or status filter.</td></tr>
-                @endforelse
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 
     <div class="card-manager-footer">
-        <div class="pagination-info">Showing {{ $cards->firstItem() ?? 0 }} to {{ $cards->lastItem() ?? 0 }} of {{ $cards->total() }} cards</div>
-        <div class="pagination-controls">{{ $cards->links() }}</div>
+        <div class="pagination-info">Showing <?php echo e($cards->firstItem() ?? 0); ?> to <?php echo e($cards->lastItem() ?? 0); ?> of <?php echo e($cards->total()); ?> cards</div>
+        <div class="pagination-controls"><?php echo e($cards->links()); ?></div>
     </div>
 
     <dialog id="card-modal" class="custom-modal">
@@ -169,4 +168,6 @@
         </form>
     </dialog>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', ['page' => 'deck-detail'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\vibe-coding\resources\views/screens/deck-detail.blade.php ENDPATH**/ ?>

@@ -45,9 +45,11 @@ class StudySessionService
             ? $this->selectDueCard($dueCardsQuery)
             : $this->selectNewCard($user, $deckId);
 
-        $totalCards = $dueCardsCount > 0
-            ? $dueCardsCount
-            : $this->countNewCards($user, $deckId);
+        $newCount = $this->countNewCards($user, $deckId);
+        $learningCount = $this->countDueByStates($user, $deckId, $now, ['learning', 'relearning']);
+        $reviewCount = $this->countDueByStates($user, $deckId, $now, ['review']);
+
+        $totalCards = $newCount + $learningCount + $reviewCount;
 
         return [
             'session_id' => sprintf(
@@ -60,13 +62,26 @@ class StudySessionService
             'deck_id' => $deckId,
             'current_card' => $selectedCard ? $this->mapCard($selectedCard) : null,
             'progress' => [
+                'new' => $newCount,
+                'learning' => $learningCount,
+                'review' => $reviewCount,
                 'total' => $totalCards,
                 'completed' => 0,
-                'remaining' => max($totalCards - ($selectedCard ? 1 : 0), 0),
+                'remaining' => $totalCards,
                 'has_cards' => (bool) $selectedCard,
                 'ended' => $selectedCard === null,
             ],
         ];
+    }
+
+    private function countDueByStates(User $user, ?int $deckId, CarbonImmutable $now, array $states): int
+    {
+        return $this->baseCardsQuery($user, $deckId)
+            ->whereIn('state', $states)
+            ->where(function (Builder $query) use ($now): void {
+                $query->whereNull('due_at')->orWhere('due_at', '<=', $now);
+            })
+            ->count();
     }
 
     private function selectDueCard(Builder $query): ?Card

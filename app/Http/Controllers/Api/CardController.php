@@ -99,6 +99,46 @@ class CardController extends Controller
         return response()->json(['deleted' => true, 'id' => $card->id]);
     }
 
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $user = $this->resolveUser($request);
+        $validated = $request->validate([
+            'deck_id' => ['nullable', 'integer', 'exists:decks,id'],
+            'all' => ['nullable', 'boolean'],
+            'ids' => ['nullable', 'array'],
+            'ids.*' => ['integer', 'exists:cards,id'],
+            'exclude_ids' => ['nullable', 'array'],
+            'exclude_ids.*' => ['integer', 'exists:cards,id'],
+        ]);
+
+        $query = Card::query()->where('user_id', $user->id);
+
+        if (!empty($validated['all']) && !empty($validated['deck_id'])) {
+            $query->where('deck_id', $validated['deck_id']);
+            if (!empty($validated['exclude_ids'])) {
+                $query->whereNotIn('id', $validated['exclude_ids']);
+            }
+        } elseif (!empty($validated['ids'])) {
+            $query->whereIn('id', $validated['ids']);
+        } else {
+            return response()->json(['deleted' => 0]);
+        }
+
+        $cards = $query->with('note')->get();
+        $count = 0;
+
+        foreach ($cards as $card) {
+            $note = $card->note;
+            $card->delete();
+            if ($note !== null && $note->cards()->count() === 0) {
+                $note->delete();
+            }
+            $count++;
+        }
+
+        return response()->json(['deleted' => $count]);
+    }
+
     private function createCard(User $user, Deck $deck, string $frontText, string $backText): Card
     {
         $note = Note::query()->create([

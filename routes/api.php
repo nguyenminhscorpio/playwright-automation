@@ -22,6 +22,7 @@ Route::delete('/decks/{deck}', [DeckController::class, 'destroy']);
 
 Route::get('/cards', [CardController::class, 'index']);
 Route::post('/cards', [CardController::class, 'store']);
+Route::delete('/cards/bulk', [CardController::class, 'bulkDestroy']);
 Route::get('/cards/{card}', [CardController::class, 'show']);
 Route::put('/cards/{card}', [CardController::class, 'update']);
 Route::delete('/cards/{card}', [CardController::class, 'destroy']);

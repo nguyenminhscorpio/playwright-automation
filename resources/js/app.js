@@ -111,6 +111,14 @@ const setupDeckDetail = () => {
     const feedback = app.querySelector('[data-card-form-feedback]');
     const deckId = Number(app.dataset.deckId || '');
 
+    const deckSwitcher = app.querySelector('[data-deck-switcher]');
+    deckSwitcher?.addEventListener('change', () => {
+        const selectedId = deckSwitcher.value;
+        if (selectedId && Number(selectedId) !== deckId) {
+            window.location.href = `/decks/${selectedId}`;
+        }
+    });
+
     const close = () => modal?.close();
     app.querySelectorAll('[data-close-card-modal-button]').forEach((button) => button.addEventListener('click', close));
     app.querySelector('[data-open-card-modal-button]')?.addEventListener('click', () => {
@@ -134,14 +142,123 @@ const setupDeckDetail = () => {
         });
     });
 
+    const deleteModal = document.getElementById('delete-card-modal');
+    const deleteForm = app.querySelector('[data-delete-card-form]');
+    const deleteCardIdInput = app.querySelector('[data-delete-card-id-input]');
+    const deleteFeedback = app.querySelector('[data-delete-card-form-feedback]');
+    const deleteSubmitBtn = app.querySelector('[data-delete-card-submit-button]');
+    const deleteModalMessage = app.querySelector('[data-delete-modal-message]');
+
+    const closeDelete = () => deleteModal?.close();
+    app.querySelectorAll('[data-close-delete-modal-button]').forEach((button) => button.addEventListener('click', closeDelete));
+
+    const totalCards = Number(app.dataset.totalCards || '0');
+    let isAllSelected = false;
+    let excludedIds = new Set();
+
+    const openDeleteModal = (ids) => {
+        if (!ids || ids.length === 0) return;
+        deleteCardIdInput.value = ids.join(',');
+        
+        if (ids[0] === 'ALL') {
+            const excludedCount = ids.length - 1;
+            const toDeleteCount = totalCards - excludedCount;
+            deleteModalMessage.textContent = `Are you sure you want to delete ${toDeleteCount} selected cards? This action cannot be undone.`;
+        } else {
+            deleteModalMessage.textContent = ids.length === 1 
+                ? 'Are you sure you want to delete this card? This action cannot be undone.'
+                : `Are you sure you want to delete ${ids.length} selected cards? This action cannot be undone.`;
+        }
+        
+        deleteFeedback.classList.add('is-hidden');
+        deleteModal.showModal();
+    };
+
     app.querySelectorAll('[data-delete-card-button]').forEach((button) => {
-        button.addEventListener('click', async () => {
+        button.addEventListener('click', () => {
             const row = button.closest('[data-card-row]');
-            const cardId = Number(row?.dataset.cardId || '');
-            if (!cardId || !window.confirm('Delete this card?')) return;
-            await fetchJson(replaceToken(document.body.dataset.cardUrlTemplate, '__CARD__', cardId), { method: 'DELETE' });
-            window.location.reload();
+            const cardId = row?.dataset.cardId;
+            if (cardId) openDeleteModal([cardId]);
         });
+    });
+
+    const selectAllCheckbox = app.querySelector('[data-select-all-checkbox]');
+    const rowCheckboxes = Array.from(app.querySelectorAll('[data-row-checkbox]'));
+    const bulkDeleteBtn = app.querySelector('[data-action-bulk-delete]');
+
+    const updateBulkActions = () => {
+        if (!bulkDeleteBtn || rowCheckboxes.length === 0) return;
+        const checkedCount = rowCheckboxes.filter(cb => cb.checked).length;
+        const actualSelectedCount = isAllSelected ? (totalCards - excludedIds.size) : checkedCount;
+
+        bulkDeleteBtn.classList.toggle('is-hidden', actualSelectedCount === 0);
+        
+        if (selectAllCheckbox) {
+            if (isAllSelected) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = excludedIds.size > 0;
+            } else {
+                selectAllCheckbox.checked = checkedCount === rowCheckboxes.length;
+                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < rowCheckboxes.length;
+            }
+        }
+    };
+
+    selectAllCheckbox?.addEventListener('change', (e) => {
+        isAllSelected = e.target.checked;
+        excludedIds.clear();
+        rowCheckboxes.forEach(cb => cb.checked = isAllSelected);
+        updateBulkActions();
+    });
+
+    rowCheckboxes.forEach(cb => cb.addEventListener('change', (e) => {
+        if (isAllSelected) {
+            const id = Number(e.target.value);
+            if (!e.target.checked) excludedIds.add(id);
+            else excludedIds.delete(id);
+        }
+        updateBulkActions();
+    }));
+
+    bulkDeleteBtn?.addEventListener('click', () => {
+        if (isAllSelected) {
+            openDeleteModal(['ALL', ...Array.from(excludedIds)]);
+        } else {
+            const selectedIds = rowCheckboxes.filter(cb => cb.checked).map(cb => Number(cb.value));
+            openDeleteModal(selectedIds);
+        }
+    });
+
+    deleteForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const ids = deleteCardIdInput.value.split(',').filter(Boolean);
+        if (ids.length === 0) return;
+        
+        try {
+            deleteSubmitBtn.disabled = true;
+            deleteFeedback.classList.add('is-hidden');
+            
+            const payload = { deck_id: deckId };
+            if (ids[0] === 'ALL') {
+                payload.all = true;
+                if (ids.length > 1) {
+                    payload.exclude_ids = ids.slice(1).map(Number);
+                }
+            } else {
+                payload.ids = ids.map(Number);
+            }
+
+            await fetchJson('/api/cards/bulk', { 
+                method: 'DELETE',
+                body: JSON.stringify(payload)
+            });
+            window.location.reload();
+        } catch (error) {
+            deleteFeedback.textContent = error.message;
+            deleteFeedback.classList.remove('is-hidden');
+        } finally {
+            deleteSubmitBtn.disabled = false;
+        }
     });
 
     form?.addEventListener('submit', async (event) => {
@@ -266,6 +383,12 @@ const setupStudy = async () => {
     setText('[data-study-state-tag]', card.state || 'Card');
     setText('[data-study-mode-tag]', `Mode: ${session.mode}`);
 
+    if (session.progress) {
+        setText('[data-study-new-count]', session.progress.new);
+        setText('[data-study-learning-count]', session.progress.learning);
+        setText('[data-study-review-count]', session.progress.review);
+    }
+
     document.querySelectorAll('[data-study-tts-button]').forEach((button) => {
         button.disabled = false;
         button.addEventListener('click', async () => {
@@ -275,21 +398,29 @@ const setupStudy = async () => {
         });
     });
 
-    document.querySelector('[data-study-reveal-button]')?.addEventListener('click', () => {
-        sessionStorage.setItem('flashmind-study-reveal', JSON.stringify({ session, card, mode: session.mode }));
-        window.location.href = body.dataset.studyAnswerUrl + '?mode=' + (body.dataset.studyMode || 'flip') + (body.dataset.studyDeckId ? '&deck_id=' + body.dataset.studyDeckId : '');
-    });
-
-    document.querySelector('[data-study-check-button]')?.addEventListener('click', async () => {
-        const userAnswer = document.querySelector('[data-study-answer-input]')?.value?.trim() || '';
-        if (!userAnswer) return;
-        const result = await fetchJson(replaceToken(body.dataset.studyCheckAnswerUrlTemplate, '__CARD__', card.id), {
-            method: 'POST',
-            body: JSON.stringify({ mode: 'typing', user_answer: userAnswer }),
+    const revealButton = document.querySelector('[data-study-reveal-button]');
+    if (revealButton) {
+        revealButton.disabled = false;
+        revealButton.addEventListener('click', () => {
+            sessionStorage.setItem('flashmind-study-reveal', JSON.stringify({ session, card, mode: session.mode }));
+            window.location.href = body.dataset.studyAnswerUrl + '?mode=' + (body.dataset.studyMode || 'flip') + (body.dataset.studyDeckId ? '&deck_id=' + body.dataset.studyDeckId : '');
         });
-        sessionStorage.setItem('flashmind-study-reveal', JSON.stringify({ session, card, mode: 'typing', user_answer: userAnswer, judged_result: result.result }));
-        window.location.href = body.dataset.studyAnswerUrl + '?mode=typing' + (body.dataset.studyDeckId ? '&deck_id=' + body.dataset.studyDeckId : '');
-    });
+    }
+
+    const checkButton = document.querySelector('[data-study-check-button]');
+    if (checkButton) {
+        checkButton.disabled = false;
+        checkButton.addEventListener('click', async () => {
+            const userAnswer = document.querySelector('[data-study-answer-input]')?.value?.trim() || '';
+            if (!userAnswer) return;
+            const result = await fetchJson(replaceToken(body.dataset.studyCheckAnswerUrlTemplate, '__CARD__', card.id), {
+                method: 'POST',
+                body: JSON.stringify({ mode: 'typing', user_answer: userAnswer }),
+            });
+            sessionStorage.setItem('flashmind-study-reveal', JSON.stringify({ session, card, mode: 'typing', user_answer: userAnswer, judged_result: result.result }));
+            window.location.href = body.dataset.studyAnswerUrl + '?mode=typing' + (body.dataset.studyDeckId ? '&deck_id=' + body.dataset.studyDeckId : '');
+        });
+    }
 
     if (body.dataset.studyScreen === 'answer') {
         const stored = JSON.parse(sessionStorage.getItem('flashmind-study-reveal') || '{}');
@@ -298,6 +429,20 @@ const setupStudy = async () => {
             setText('[data-study-back-text]', stored.card.back_text || stored.card.back_plain_text || 'No answer available.');
             setText('[data-study-user-answer]', stored.user_answer || '');
             document.querySelector('[data-study-user-answer-section]')?.classList.toggle('is-hidden', !stored.user_answer);
+
+            if (stored.session && stored.session.progress) {
+                setText('[data-study-new-count]', stored.session.progress.new);
+                setText('[data-study-learning-count]', stored.session.progress.learning);
+                setText('[data-study-review-count]', stored.session.progress.review);
+            }
+
+            // Auto-play TTS for the back side
+            const backText = stored.card.back_plain_text || stored.card.back_text;
+            if (backText) {
+                setTimeout(() => {
+                    playTts(backText).catch(err => console.warn('Auto-play TTS failed:', err));
+                }, 300);
+            }
         }
 
         document.querySelectorAll('[data-study-rate-button]').forEach((button) => button.addEventListener('click', async () => {

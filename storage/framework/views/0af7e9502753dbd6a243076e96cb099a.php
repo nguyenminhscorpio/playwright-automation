@@ -1,13 +1,11 @@
-@extends('layouts.app')
+<?php ($studyScreen = 'answer'); ?>
 
-@php($studyScreen = 'answer')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
     <section class="study-page">
         <div class="study-shell" data-study-app>
             <div class="study-progress study-progress--split">
                 <div>
-                    <span class="eyebrow" data-study-deck-name>{{ $studyDeckName ?? 'Study Session' }}</span>
+                    <span class="eyebrow" data-study-deck-name><?php echo e($studyDeckName ?? 'Study Session'); ?></span>
                     <h1 class="study-title" data-study-progress-title>Current Card</h1>
                 </div>
                 <div class="progress-group">
@@ -28,4 +26,6 @@
             <section class="study-empty-state is-hidden" data-study-empty-state><span class="material-symbols-outlined">check_circle</span><h2 data-study-empty-title>Session complete</h2><p data-study-empty-message>No answer payload was found. Start a study card first.</p></section>
         </div>
     </section>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\vibe-coding\resources\views/screens/study-answer.blade.php ENDPATH**/ ?>

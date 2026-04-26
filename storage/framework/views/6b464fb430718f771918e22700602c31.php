@@ -1,13 +1,11 @@
-@extends('layouts.app')
+<?php ($studyScreen = 'front'); ?>
 
-@php($studyScreen = 'front')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
     <section class="study-page">
         <div class="study-shell" data-study-app>
             <div class="study-progress">
                 <div>
-                    <span class="eyebrow" data-study-deck-name>{{ $studyDeckName ?? 'Study Session' }}</span>
+                    <span class="eyebrow" data-study-deck-name><?php echo e($studyDeckName ?? 'Study Session'); ?></span>
                     <h1 class="study-title" data-study-progress-title>Session Progress</h1>
                 </div>
                 <div class="progress-group">
@@ -27,4 +25,6 @@
             <div class="study-actions study-actions--center"><button class="primary-button primary-button--pill" type="button" data-study-reveal-button disabled><span class="material-symbols-outlined">visibility</span><span>Show Answer</span></button></div>
         </div>
     </section>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\vibe-coding\resources\views/screens/study-front.blade.php ENDPATH**/ ?>

@@ -58,6 +58,10 @@ class ScreenController extends Controller
         [$user] = $this->resolveStudyContext($request);
 
         $deckModel = Deck::query()->where('user_id', $user?->id)->findOrFail($deck);
+        $allDecks = Deck::query()
+            ->where('user_id', $user?->id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
         $filters = [
             'deck_id' => $deckModel->id,
             'q' => $request->string('q')->toString(),
@@ -70,6 +74,7 @@ class ScreenController extends Controller
             'page' => 'deck-detail',
             'deckDetailUserId' => $user?->id,
             'deck' => $deckModel,
+            'allDecks' => $allDecks,
             'cards' => $cards,
             'filters' => $filters,
         ]);
