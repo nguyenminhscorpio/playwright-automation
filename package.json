@@ -5,7 +5,9 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
+        "pretest:e2e": "node scripts/cleanup-playwright-report-port.mjs",
         "test:e2e": "playwright test",
+        "show-report": "node scripts/show-playwright-report-clean.mjs",
         "test:e2e:dashboard:report": "node scripts/run-playwright-report.mjs",
         "test:e2e:headed": "playwright test --headed",
         "test:e2e:ui": "playwright test --ui",
