@@ -1,55 +1,229 @@
-# 04. Nghiệp vụ bổ sung màn hình Study Session (Phase 2)
+# 03. Nghiệp vụ bổ sung màn hình Study Session (Phase 2)
 
-Tài liệu này tổng hợp các yêu cầu bổ sung, nâng cấp tính năng cho màn hình **Study Session** đã được xây dựng ở Phase 1, nhằm gia tăng trải nghiệm học tập trong Phase 2.
+Tài liệu này được cập nhật theo source hiện tại của project `vibe-coding`.
 
----
+## 1. Phạm vi hiện đang có trong source
+- Các route Study hiện tại:
+  - `/study/front`
+  - `/study/typing`
+  - `/study/answer`
+- Màn Study có 2 mode chính:
+  - `flip`
+  - `typing`
+- Có tích hợp TTS phía client bằng Web Speech API
+- Có luồng `check answer` cho mode typing
+- Có luồng `rate` để ghi review log và schedule card tiếp theo
+- Có các cải tiến liên quan tới màn Import vì flow Study phụ thuộc trực tiếp vào dữ liệu import
 
-## 1. Tính năng Text-To-Speech (TTS)
+## 2. Tính năng TTS theo source hiện tại
 
-### 1.1. Mục đích
-- Cho phép người dùng nghe phát âm nội dung của thẻ từ vựng (Flashcards).
-- Hỗ trợ tối đa cho việc học ngoại ngữ, giúp người dùng ghi nhớ từ vựng qua âm thanh, cải thiện kỹ năng nghe và phát âm.
+### 2.1. Mục tiêu
+- Cho phép người dùng nghe đọc nội dung card ngay trong Study Session.
+- Ưu tiên đơn giản, chạy phía trình duyệt, không phụ thuộc server audio.
 
-### 1.2. Vai trò nghiệp vụ
-- Tăng cường trải nghiệm học tập đa giác quan (nghe - nhìn - gõ phím).
-- Trở thành tính năng bổ trợ cốt lõi trong màn hình Study Session.
-- Cá nhân hoá trải nghiệm thông qua việc lưu lại tuỳ chọn giọng đọc của người dùng.
+### 2.2. Cách triển khai hiện tại
+- Frontend dùng file `resources/js/tts.js`
+- Cơ chế:
+  - dùng `window.speechSynthesis`
+  - tạo `SpeechSynthesisUtterance`
+  - gọi `speak()` trực tiếp ở trình duyệt
+- Khi phát audio mới:
+  - frontend gọi `cancel()` trước để dừng lượt đọc cũ
 
-### 1.3. Vị trí tích hợp (UI/UX)
-- **Màn hình Study Session:**
-  - Nút biểu tượng "Cái loa" (Speaker icon) hiển thị ngay cạnh văn bản của mặt trước (Front) và mặt sau (Back).
-  - Cho phép người dùng bấm vào loa để nghe lại phát âm bất cứ lúc nào.
+### 2.3. Vị trí nút TTS
+- `study/front`
+  - 1 nút loa cho mặt trước
+- `study/typing`
+  - 1 nút loa cho mặt trước
+- `study/answer`
+  - 1 nút loa cho `Prompt`
+  - 1 nút loa cho `Back Side`
 
-### 1.4. Cơ chế hoạt động (Technical Logic)
-- **Công nghệ:** Ưu tiên sử dụng **Web Speech API** (API có sẵn trên các trình duyệt hiện đại Chrome, Firefox, Safari, Edge) để thực hiện tính năng này. Ưu điểm: Miễn phí, không độ trễ mạng, không tốn tài nguyên Server.
-- **Dữ liệu đầu vào (Text to read):** Bắt buộc phải sử dụng trường `front_plain_text` và `back_plain_text` (lấy từ bảng `notes`). Lý do: Cần đọc văn bản thô, tránh việc hệ thống đọc luôn cả các thẻ HTML (`<b>`, `<br>`) có trong trường hiển thị.
+### 2.4. Nguồn text để đọc
+- Frontend ưu tiên:
+  - `front_plain_text` hoặc `back_plain_text`
+- Nếu không có plain text thì fallback:
+  - `front_text`
+  - `back_text`
 
-### 1.5. Dữ liệu Mapping Database (Từ Phase 1)
-- Bảng `users` đã có sẵn các trường chuẩn bị cho tính năng này:
-  - `locale`: Lưu trữ ngôn ngữ ưu tiên của người dùng (Ví dụ: `en-US`, `ja-JP`). Sẽ dùng làm ngôn ngữ mặc định khi tìm kiếm giọng đọc trong Web Speech API.
-  - `preferred_tts_voice`: Tên giọng đọc cụ thể mà người dùng yêu thích (Ví dụ: `Google US English`, `Microsoft Ichiro`).
+### 2.5. Hành vi hiện tại
+- Nút TTS chỉ được enable sau khi Study Session load được `current_card`
+- Nếu trình duyệt không hỗ trợ `speechSynthesis`
+  - frontend hiển thị alert `Text-to-speech is not available in this browser.`
+- Ở màn `study/answer`
+  - sau khi có reveal payload trong `sessionStorage`
+  - frontend tự động phát `back text` sau khoảng `300ms`
+- Sau khi người dùng bấm rating
+  - frontend gọi `stopTts()` trước khi chuyển sang card tiếp theo
 
-### 1.6. Hành vi người dùng
-- **Phát âm thủ công:** Bấm vào icon loa -> Hệ thống đọc ngay dòng text đó. Bấm thêm lần nữa -> Phát lại từ đầu.
-- **Cấu hình giọng đọc (Optional):** Chọn giọng Nam/Nữ hoặc chọn Ngôn ngữ (Language) ở màn hình Setting để lưu vào Database (`preferred_tts_voice`).
-- **Auto-play (Tương lai):** Có thể thêm setting cho phép tự động đọc mặt trước ngay khi thẻ xuất hiện, hoặc tự động đọc mặt sau khi bấm lật thẻ. 
+### 2.6. Giới hạn hiện tại
+- Chưa có chọn giọng đọc
+- Chưa có cấu hình `locale` hoặc `preferred_tts_voice`
+- Chưa có lưu preference TTS vào database
+- Chưa có server-side TTS
+- API `POST /api/study/cards/{id}/play-tts` mới chỉ là scaffold, UI hiện tại không dùng endpoint này
 
-### 1.7. Ghi chú triển khai (Lưu ý quan trọng)
-- **Hạn chế của Trình duyệt:** Trình duyệt web hiện đại (đặc biệt Chrome/Safari) có chính sách "Auto-play Policy". Không cho phép tự động phát âm thanh nếu người dùng chưa tương tác (click, chạm) vào trang web. Tuy nhiên, với Study Session, người dùng đã phải click nút "Bắt đầu học", nên việc phát âm thanh sau đó sẽ không bị block.
-- Về mặt code, nên viết riêng một Service File ở Frontend (VD: `resources/js/tts.js`) để đóng gói các hàm: `play()`, `stop()`, `getAvailableVoices()`. Không nên viết trực tiếp logic Speech Synthesis vào trong các file View.
+## 3. Luồng Study Session theo source hiện tại
 
----
+### 3.1. Lấy dữ liệu session
+- Frontend gọi `GET /api/study/session`
+- Query hiện dùng:
+  - `user_id`
+  - `deck_id` (optional)
+  - `mode`
+- Response trả về:
+  - `session_id`
+  - `mode`
+  - `deck_id`
+  - `current_card`
+  - `progress`
 
-## 2. Các Yêu cầu bổ sung khác (UI/UX Fixes)
-- **Xóa phần text thừa ở mặt Front:** Hiện tại ở màn hình Study Session (chế độ Flip/Typing), bên dưới dòng text chính (chữ to) đang bị lặp lại một dòng text nhỏ hơn y hệt (front_plain_text). Cần phải ẩn hoặc xóa bỏ dòng text nhỏ này đi để giao diện đỡ rối và tránh trùng lặp.
-- **Ẩn chữ "No file chosen" ở màn hình Import:** Trình duyệt đang tự động render dòng chữ "No file chosen" mặc định kế bên nút Choose File. Cần custom lại CSS của thẻ `<input type="file">` để ẩn dòng chữ này đi cho UI được đẹp mắt và chuyên nghiệp hơn.
-- **Thêm margin cho Message trạng thái Import:** Ở màn hình Import, khoảng cách giữa thanh input/button và ô message thông báo trạng thái (Ví dụ: "Import complete...") đang bị quá sát nhau. Cần thêm margin (khoảng cách) để tách biệt rõ ràng hơn.
-- **Nút "Confirm Import":** Đổi màu nút sang màu xanh (Success Green) để nhấn mạnh đây là bước xác nhận cuối cùng. Sau khi người dùng bấm xác nhận và hệ thống Import thành công, nút này cần phải được **Disable** (vô hiệu hóa) để tránh việc người dùng bấm nhầm nhiều lần gây trùng lặp dữ liệu.
+### 3.2. Cách chọn card hiện tại
+- `StudySessionService` ưu tiên chọn theo thứ tự:
+  - `relearning` đến hạn
+  - `review` đến hạn
+  - `learning` đến hạn
+  - nếu không còn due card thì fallback sang card `new` đầu tiên
 
----
+### 3.3. Progress hiện có
+- `progress` trả về các số:
+  - `new`
+  - `learning`
+  - `review`
+  - `total`
+  - `completed`
+  - `remaining`
+  - `has_cards`
+  - `ended`
+- Hiện trạng source:
+  - `completed` đang luôn là `0`
+  - `remaining` đang bằng `total`
+  - chưa có bộ đếm tiến độ theo session thực sự
 
-## 3. Chức năng Tạo Deck mới (Create New Deck)
-- **Thành phần Modal:**
-  - **DECK NAME (Bắt buộc):** Ô nhập tên bộ thẻ (Ví dụ: English Vocabulary).
-  - **DESCRIPTION (Tùy chọn):** Thêm ô nhập mô tả ngắn gọn (Textarea) để người dùng có thể giới thiệu về bộ thẻ.
-- **Hành vi:** Lưu cả `name` và `description` vào database khi tạo.
+### 3.4. Mode Flip
+- Màn `/study/front`
+  - hiển thị card hiện tại
+  - hiển thị state chip
+  - có nút `Show Answer`
+- Khi bấm `Show Answer`
+  - frontend lưu payload vào `sessionStorage`
+  - chuyển sang `/study/answer`
+
+### 3.5. Mode Typing
+- Màn `/study/typing`
+  - hiển thị front side
+  - có textarea nhập đáp án
+  - có nút `Check Answer`
+  - có nút `Show Hint`
+- Hiện trạng source:
+  - `Check Answer` đã hoạt động
+  - `Show Hint` đang disabled, chưa có logic xử lý
+
+### 3.6. Kiểm tra đáp án mode Typing
+- Frontend gọi `POST /api/study/cards/{id}/check-answer`
+- Backend so sánh `user_answer` với `back_plain_text`
+- Logic chuẩn hóa hiện tại:
+  - chuyển lowercase
+  - bỏ dấu câu/ký tự đặc biệt
+  - normalize khoảng trắng
+- Kết quả trả về:
+  - `correct`
+  - `close_match`
+  - `incorrect`
+- Ngưỡng `close_match` hiện dùng `similar_text` với độ tương đồng từ `85%` trở lên
+
+### 3.7. Màn Answer
+- `/study/answer` hiển thị:
+  - `Prompt`
+  - `Your Answer` nếu đi từ mode typing
+  - `Back Side`
+  - state tag
+  - mode tag
+  - 4 nút rating:
+    - `Again`
+    - `Hard`
+    - `Good`
+    - `Easy`
+
+### 3.8. Rating và scheduling
+- Khi người dùng bấm rating:
+  - frontend gọi `POST /api/study/cards/{id}/rate`
+- Backend:
+  - cập nhật `cards.state`
+  - cập nhật `current_step`
+  - cập nhật `due_at`
+  - cập nhật `last_reviewed_at`
+  - cập nhật các field FSRS hiện có như `stability`, `difficulty`, `reps`, `lapses`
+  - ghi 1 bản ghi vào `review_logs`
+- Sau đó frontend:
+  - xóa reveal payload trong `sessionStorage`
+  - redirect về `/study/front` hoặc `/study/typing` để load card tiếp theo
+
+### 3.9. Empty state
+- Nếu session không có `current_card`
+  - frontend ẩn card/rating/actions
+  - hiện `Session complete`
+
+## 4. Import-related bổ sung đang có trong source
+
+### 4.1. Màn Import
+- Route: `/imports`
+- Mục tiêu:
+  - upload file TXT kiểu Anki
+  - preview trước
+  - confirm sau
+
+### 4.2. Thành phần hiện có
+- `Target deck`
+- `TXT file`
+- nút `Preview Import`
+- nút `Confirm Import`
+- khối `Summary`
+- bảng `Row Preview`
+- filter tab:
+  - `All`
+  - `Valid`
+  - `Warnings`
+  - `Errors`
+
+### 4.3. Flow preview và confirm
+- `Preview Import`
+  - gọi `POST /api/imports/txt/preview`
+  - tạo `import_job`
+  - lưu các dòng preview vào `import_job_rows`
+- `Confirm Import`
+  - gọi `POST /api/imports/txt/confirm`
+  - insert `notes` + `cards`
+  - update lại `import_job`
+
+### 4.4. Rule hiện tại
+- Invalid rows không chặn confirm
+- Khi confirm:
+  - row invalid sẽ bị bỏ qua
+  - row duplicate trong cùng `user + deck + normalized front + normalized back` sẽ bị `skipped`
+- Sau khi confirm thành công:
+  - nút `Confirm Import` bị disable
+  - feedback hiển thị số `imported`, `skipped`, `invalid`
+
+### 4.5. Tạo deck mới từ màn Import
+- Dropdown `Target deck` có option `+ Create New Deck...`
+- Khi chọn option này:
+  - mở modal tạo deck dùng chung
+  - sau khi tạo thành công:
+    - thêm option mới vào dropdown
+    - tự chọn deck vừa tạo
+
+## 5. Dữ liệu và ràng buộc cần phản ánh đúng theo source
+- Bảng `users` hiện tại chỉ có các field mặc định của Laravel.
+- Chưa có các field:
+  - `locale`
+  - `preferred_tts_voice`
+  - `daily_goal`
+- Dashboard/Study hiện không dùng `study_days`.
+- TTS hiện không lấy cấu hình từ DB.
+
+## 6. Ghi chú hiện trạng quan trọng
+- Study pages đang gắn header `no-store/no-cache` để giảm rủi ro browser cache HTML cũ.
+- Link Study trong layout dùng query `sv=study-v2` để hỗ trợ cache busting phía route.
+- Màn `study/answer` phụ thuộc vào reveal payload trong `sessionStorage` để hiển thị đầy đủ ngữ cảnh trả lời typing và để rating flow hoạt động đúng.
+- Nếu người dùng mở thẳng `/study/answer` mà không đi qua bước reveal/check-answer, UI có thể vẫn render card hiện tại từ session API nhưng không có đầy đủ ngữ cảnh của lượt học trước đó.

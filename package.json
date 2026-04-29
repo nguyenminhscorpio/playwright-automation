@@ -6,6 +6,7 @@
         "build": "vite build",
         "dev": "vite",
         "test:e2e": "playwright test",
+        "test:e2e:dashboard:report": "node scripts/run-playwright-report.mjs",
         "test:e2e:headed": "playwright test --headed",
         "test:e2e:ui": "playwright test --ui",
         "codegen": "playwright codegen http://localhost:8000/dashboard"

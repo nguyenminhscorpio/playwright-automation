@@ -112,8 +112,7 @@ class DashboardStatsService
             ->groupBy('decks.id', 'decks.name', 'decks.description')
             ->orderByDesc('due_count')
             ->orderByDesc('last_reviewed_at')
-            ->orderBy('decks.id')
-            ->limit(4)
+            ->orderByDesc('decks.id')
             ->get()
             ->map(static function ($row): array {
                 $totalCount = (int) $row->total_count;

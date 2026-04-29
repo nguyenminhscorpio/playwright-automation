@@ -85,16 +85,54 @@ const setupCreateDeck = () => {
 };
 
 const setupDashboard = () => {
+    const deleteModal = document.getElementById('delete-deck-modal');
+    const deleteForm = document.querySelector('[data-delete-deck-form]');
+    const deleteDeckIdInput = document.querySelector('[data-delete-deck-id-input]');
+    const deleteFeedback = document.querySelector('[data-delete-deck-form-feedback]');
+    const deleteSubmitBtn = document.querySelector('[data-delete-deck-submit-button]');
+    const deleteModalMessage = document.querySelector('[data-delete-deck-modal-message]');
+    let activeDeckCard = null;
+
+    const closeDeleteModal = () => deleteModal?.close();
+    document.querySelectorAll('[data-close-delete-deck-modal-button]').forEach((button) => button.addEventListener('click', closeDeleteModal));
+
     document.querySelectorAll('[data-delete-deck-button]').forEach((button) => {
-        button.addEventListener('click', async () => {
+        button.addEventListener('click', () => {
             const card = button.closest('[data-deck-card]');
             const deckId = Number(card?.dataset.deckId || '');
             const deckName = button.dataset.deckName || 'this deck';
-            if (!deckId || !window.confirm(`Delete "${deckName}"? This also removes its notes and cards.`)) return;
+            if (!deckId || !deleteModal || !deleteDeckIdInput || !deleteModalMessage) return;
+
+            activeDeckCard = card;
+            deleteDeckIdInput.value = String(deckId);
+            deleteModalMessage.textContent = `Are you sure you want to delete "${deckName}"? This also removes its notes and cards.`;
+            deleteFeedback?.classList.add('is-hidden');
+            if (deleteFeedback) deleteFeedback.textContent = '';
+            deleteModal.showModal();
+        });
+    });
+
+    deleteForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const deckId = Number(deleteDeckIdInput?.value || '');
+        if (!deckId) return;
+
+        try {
+            deleteSubmitBtn.disabled = true;
+            deleteFeedback?.classList.add('is-hidden');
+            if (deleteFeedback) deleteFeedback.textContent = '';
 
             await fetchJson(replaceToken(document.body.dataset.deckUrlTemplate, '__DECK__', deckId), { method: 'DELETE' });
-            card?.remove();
-        });
+            activeDeckCard?.remove();
+            closeDeleteModal();
+        } catch (error) {
+            if (deleteFeedback) {
+                deleteFeedback.textContent = error.message;
+                deleteFeedback.classList.remove('is-hidden');
+            }
+        } finally {
+            deleteSubmitBtn.disabled = false;
+        }
     });
 };
 

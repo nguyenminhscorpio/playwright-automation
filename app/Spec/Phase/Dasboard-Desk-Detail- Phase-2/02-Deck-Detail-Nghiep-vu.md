@@ -1,68 +1,189 @@
 # 02. Nghiệp vụ màn hình Deck Detail (Phase 2)
 
+Tài liệu này được cập nhật theo source hiện tại của project `vibe-coding`.
+
 ## 1. Mục đích
-- Màn hình Deck Detail tập trung vào duy nhất một Bộ thẻ (Deck) cụ thể (vd: Japanese Vocabulary).
-- Cung cấp thông tin chi tiết về các thẻ (Cards) bên trong bộ thẻ đó, kèm theo trạng thái học tập của từng thẻ.
-- Là nơi người dùng thao tác quản lý thẻ (Thêm mới, Import) đối với bộ thẻ đang xem.
+- Route màn hình: `/decks/{deck}`
+- Đây là màn hình quản lý card trong một deck cụ thể.
+- Mục tiêu hiện tại:
+  - xem danh sách card theo deck
+  - tìm kiếm và lọc theo trạng thái
+  - tạo, sửa, xóa card
+  - bulk delete card
+  - điều hướng nhanh sang màn hình Import của đúng deck đó
 
-## 2. Vai trò nghiệp vụ
-- Quản lý nội dung vi mô (Micro-management) của một Deck.
-- Minh bạch hoá trạng thái FSRS của từng card (New, Learning, Review).
-- Đóng vai trò là trang đích (Landing Page) cho một chủ đề học tập cụ thể.
+## 2. Phạm vi hiện đang có trong source
+- Breadcrumb `My Decks / [deck switcher]`
+- Header quản lý deck
+- Nút `Create Card`
+- Nút `Import`
+- Nút `Delete Selected`
+- Bộ lọc search + status
+- Bảng card có phân trang
+- Modal tạo/sửa card
+- Modal xác nhận xóa card
 
-## 3. Thành phần UI chính trên màn hình (Dựa theo thiết kế)
-1. **Breadcrumb:** Hiển thị đường dẫn điều hướng (`My Decks > Japanese Vocabulary`).
-2. **Header (Khu vực Nút hành động):** 
-   - Tên Deck lớn (Japanese Vocabulary) và Mô tả phụ.
-   - Nút **"Create Card"**: Khi bấm vào sẽ mở ra Form (Modal hoặc trang riêng) để thêm thẻ mới bằng cách nhập chữ thủ công.
-   - Nút **"Import"**: Khi bấm vào sẽ link thẳng tới màn hình "Import TXT into your deck", đồng thời phải chọn mặc định tên của Deck hiện tại ở ô chọn `Target deck`.
-3. **Bộ lọc / Tìm kiếm (Filters & Search):**
-   - Thanh tìm kiếm "Search cards by front, back, or tags..." ở trên cùng giúp tìm thẻ.
-   - Các dropdown lọc: Lọc theo Status (New, Learning, Review).
-   - Nút "More Filters" (Mở rộng bộ lọc nếu cần).
-4. **Card Table (Danh sách thẻ dạng bảng):** Liệt kê các thẻ dưới dạng bảng (Data Table) thay vì dạng lưới (Grid). Các cột bao gồm:
-   - **Checkbox:** Dùng để chọn nhiều thẻ cùng lúc (Bulk actions).
-   - **FRONT:** Nội dung chính mặt trước của thẻ (vd: 食べる (Taberu)).
-   - **BACK:** Nội dung mặt sau / Nghĩa của thẻ (vd: To eat).
-   - **STATUS:** Nhãn trạng thái FSRS hiện tại của thẻ (vd: Review (Xanh), Learning (Vàng), New (Xám/Tím)).
-   - **LAST REVIEWED:** Ngày giờ học lần cuối (vd: 2026-10-12 14:30 hoặc 2 days ago).
-   - **MASTERY:** Thanh tiến trình (Progress bar) thể hiện độ thuần thục của thẻ.
-   - **NEXT:** Ngày giờ cần học lại thẻ này (Ngày sẽ phải ôn lại).
-   - **ACTIONS:** Các nút thao tác nhanh trên từng thẻ (Edit, Delete).
-5. **Phân trang (Pagination):**
-   - Hiển thị thông tin phân trang ở dưới cùng bảng (vd: "Showing 1 to 4 of 128 cards").
-   - Nút Previous/Next.
+## 3. Thành phần UI và hành vi hiện tại
 
-## 4. Dữ liệu & Logic nghiệp vụ (Mapping Database Phase 1)
-- **Deck Info:** Lấy từ bảng `decks` (`name`, `description`).
-- **Tổng số Cards:** `COUNT(*)` từ bảng `cards` where `deck_id`.
-- **Table Columns (Dữ liệu bảng):** Truy vấn từ bảng `cards` join với `notes`.
-  - **FRONT:** `notes.front_plain_text` hoặc hiển thị rút gọn `front_text`.
-  - **BACK:** `notes.back_plain_text`.
-  - **STATUS:** Map từ `cards.state`:
-    - `new` -> Nhãn "New".
-    - `learning` / `relearning` -> Nhãn "Learning" (Màu vàng).
-    - `review` -> Nhãn "Review" (Màu xanh).
-  - **LAST REVIEWED:** Lấy từ trường `cards.last_review` (nếu có) hoặc thời gian log gần nhất. Hiển thị dạng "Never" nếu thẻ `new`.
-  - **MASTERY:** Tính toán phần trăm thuần thục dựa trên `cards.stability` hoặc `cards.reps` để render độ dài của thanh Progress Bar.
-  - **NEXT:** Lấy từ `cards.due_at`. Hiển thị chính xác ngày/giờ sẽ phải ôn lại.
-    - Nếu `due_at` là NULL (thẻ `new`), hiển thị "-". 
-    - Nếu `due_at` <= thời điểm hiện tại, hiển thị "Today" hoặc "Now". 
-    - Nếu lớn hơn ngày hiện tại, hiển thị ngày giờ cụ thể.
+### 3.1. Breadcrumb và chuyển deck
+- Dòng breadcrumb gồm:
+  - link `My Decks` về Dashboard
+  - dropdown deck switcher
+- Khi đổi deck trong dropdown:
+  - frontend redirect sang `/decks/{id}` của deck được chọn
 
-## 5. Hành vi người dùng & Điều hướng
-- **Tìm kiếm & Lọc:** Nhập text vào thanh tìm kiếm hoặc chọn Status ở dropdown để filter trực tiếp danh sách thẻ trong bảng.
-- **Bulk Action (Chọn nhiều):** Checkbox đầu mỗi dòng cho phép chọn nhiều thẻ để xoá hoặc di chuyển (Future Phase).
-- **Nút Import:** Chuyển hướng sang màn hình Import (`/imports`), và tự động đẩy ID của Deck hiện tại sang để ô `Target Deck` chọn sẵn mặc định.
-- **Nút Create Card:** Bấm nút này mở ra Form (Modal pop-up hoặc trang mới) cho phép điền text thủ công để tạo Flashcard ngay lập tức.
-- **Chỉnh sửa / Xóa Card:** 
-  - Click vào nút Edit ở dòng thẻ sẽ mở ra popup form với dữ liệu cũ của thẻ để sửa nội dung Front/Back.
-  - Click vào nút Delete ở dòng thẻ sẽ hiển thị hộp thoại xác nhận cảnh báo trước khi xóa. Sau khi xóa, cập nhật lại dữ liệu bảng mà không cần tải lại cả trang nếu có thể.
+### 3.2. Header quản lý
+- Tiêu đề hiện tại: `Card Management`
+- Tên deck được hiển thị dưới dạng badge cạnh tiêu đề.
+- Subtitle ưu tiên dùng `deck.description`, nếu trống sẽ hiển thị câu mô tả mặc định.
 
-## 6. Kết quả mong đợi
-- Người dùng có cái nhìn chi tiết và toàn diện về trạng thái các thẻ trong bộ từ vựng.
-- Người dùng dễ dàng thêm thẻ mới, import từ vựng hoặc chỉnh sửa thẻ hiện có.
+### 3.3. Thanh action
+- `Delete Selected`
+  - mặc định ẩn
+  - chỉ hiện khi có card được chọn
+- `Create Card`
+  - mở modal tạo card
+- `Import`
+  - chuyển sang `/imports?deck_id={id}`
+  - deck hiện tại sẽ được chọn sẵn ở màn Import
 
-## 7. Ghi chú triển khai
-- Các tham số "Review", "Learning", "New" lấy trực tiếp từ field `state` của bảng `cards`.
-- Phân trang (Pagination): Do giao diện là Table list, việc load dữ liệu bắt buộc phải dùng phân trang (offset/limit) với các nút Prev/Next thay vì tải toàn bộ. Mặc định có thể load 20-50 thẻ/trang.
+### 3.4. Bộ lọc và tìm kiếm
+- Ô search cho phép tìm theo:
+  - front
+  - back
+  - plain text
+  - `note_text`
+- Dropdown status hiện có:
+  - `Any Status`
+  - `Learning`
+  - `Review`
+  - `New`
+- Nút `Apply` submit lại trang với query string hiện tại.
+
+### 3.5. Card table
+- Bảng hiện có các cột:
+  - checkbox
+  - `FRONT`
+  - `BACK`
+  - `STATUS`
+  - `LAST REVIEWED`
+  - `MASTERY`
+  - `NEXT`
+  - `ACTIONS`
+
+### 3.6. Render dữ liệu từng dòng
+- `FRONT`
+  - ưu tiên `front_plain_text`
+  - fallback sang `front_text`
+- `BACK`
+  - dùng `back_plain_text`
+  - đang truncate khoảng 50 ký tự
+- `STATUS`
+  - `review` -> `Review`
+  - `learning` hoặc `relearning` -> `Learning`
+  - còn lại -> `New`
+- `LAST REVIEWED`
+  - dùng `diffForHumans()`
+  - nếu chưa học lần nào thì hiện `Never`
+- `MASTERY`
+  - hiện là progress bar ước lượng theo UI
+  - `review`: `round(stability * 10)`, tối đa 100%
+  - `learning/relearning`: 20%
+  - `new`: 0%
+- `NEXT`
+  - `NULL` -> `-`
+  - quá hạn hoặc cùng ngày nhưng đã qua giờ -> `Today`
+  - cùng ngày và còn dưới 60 phút -> `In Xm`
+  - cùng ngày và còn trên 60 phút -> `In Xh`
+  - các ngày sau -> `In X day(s)`
+- `ACTIONS`
+  - nút `Edit`
+  - nút `Delete`
+
+### 3.7. Empty state và pagination
+- Nếu không có card khớp điều kiện lọc:
+  - hiển thị `No cards found for the current search or status filter.`
+- Phân trang đang dùng Laravel paginator.
+- Số bản ghi mỗi trang hiện tại: `20`
+
+## 4. Dữ liệu và logic nghiệp vụ theo source hiện tại
+
+### 4.1. User và deck context
+- Màn hình dùng cùng cơ chế resolve user như Dashboard:
+  - ưu tiên `dev.study@example.com`
+  - hoặc user đầu tiên có card
+- Deck được phép xem phải thuộc đúng `user_id` đó.
+
+### 4.2. Lấy danh sách card
+- `ScreenController::deckDetail()` gọi `CardRepository::paginateForUser()`
+- Filter gửi xuống repository:
+  - `deck_id`
+  - `q`
+  - `status`
+- Sort hiện tại:
+  - `id` giảm dần
+
+### 4.3. Search logic
+- Search đang match trên bảng `notes` với các trường:
+  - `front_text`
+  - `back_text`
+  - `front_plain_text`
+  - `back_plain_text`
+  - `note_text`
+
+### 4.4. Status filter logic
+- `all` hoặc rỗng -> không filter
+- `learning` -> gom cả `learning` và `relearning`
+- `new`, `review`, `relearning` -> filter đúng theo state tương ứng
+
+## 5. CRUD card theo source hiện tại
+
+### 5.1. Tạo card
+- Modal có 2 trường:
+  - `Front`
+  - `Back`
+- Submit gọi `POST /api/cards`
+- Payload:
+  - `deck_id`
+  - `front_text`
+  - `back_text`
+- Backend tạo:
+  - 1 `note`
+  - 1 `card`
+- Card mới được khởi tạo với:
+  - `state = new`
+  - `due_at = null`
+  - `learning_steps_json = [1, 10]`
+  - `relearning_steps_json = [10]`
+
+### 5.2. Sửa card
+- Nút `Edit` mở lại đúng modal create nhưng ở mode edit.
+- Submit gọi `PUT /api/cards/{id}`
+- Backend cập nhật:
+  - `front_text`
+  - `back_text`
+  - `front_plain_text`
+  - `back_plain_text`
+
+### 5.3. Xóa một card
+- Nút `Delete` mở modal xác nhận.
+- UI hiện tại dùng `DELETE /api/cards/bulk` cho cả single delete và bulk delete.
+- Nếu note không còn card nào tham chiếu sau khi xóa, note cũng bị xóa.
+
+### 5.4. Bulk delete
+- Có thể chọn nhiều card bằng checkbox.
+- Checkbox ở header bật chế độ chọn tất cả.
+- Khi submit bulk delete:
+  - gọi `DELETE /api/cards/bulk`
+  - payload có thể là:
+    - `ids` cho tập card được chọn cụ thể
+    - hoặc `all = true` + `deck_id` + `exclude_ids`
+
+## 6. Ghi chú hiện trạng quan trọng
+- `Delete Selected` hiện đang reload toàn trang sau khi thao tác xong.
+- `Create Card` và `Edit Card` cũng reload trang sau khi lưu thành công.
+- Chưa có `More Filters`.
+- Chưa có chức năng move card hay bulk action khác ngoài delete.
+- Chưa có chỉnh sửa thông tin deck tại màn này.
+- Checkbox `Select all` hiện đang hoạt động theo `deck_id` ở backend, không truyền `q/status`.
+  - Nghĩa là nếu dùng chế độ `all = true`, thao tác xóa có thể ảnh hưởng toàn bộ card của deck, không chỉ danh sách đang nhìn thấy theo filter hiện tại.

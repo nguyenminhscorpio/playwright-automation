@@ -7,10 +7,6 @@
                 <h1 class="hero__title">Welcome back, {{ $dashboardUserName }}</h1>
                 <p class="hero__subtitle">Track your streak, monthly milestone, and the decks that need attention most today.</p>
             </div>
-            <button class="primary-button" type="button" data-create-deck-button>
-                <span class="material-symbols-outlined">add</span>
-                <span>Create New Deck</span>
-            </button>
         </div>
 
         <div class="stats-grid">
@@ -105,6 +101,31 @@
                 </article>
             @endforelse
         </div>
+
+        <dialog id="delete-deck-modal" class="custom-modal">
+            <form method="dialog" class="custom-modal__form" data-delete-deck-form>
+                <div class="custom-modal__header">
+                    <h2>Delete Deck</h2>
+                    <button type="button" class="icon-button" data-close-delete-deck-modal-button><span class="material-symbols-outlined">close</span></button>
+                </div>
+                <div class="custom-modal__body">
+                    <p data-delete-deck-modal-message>Are you sure you want to delete this deck? This also removes its notes and cards.</p>
+                    <input type="hidden" data-delete-deck-id-input />
+                    <div class="study-feedback is-hidden" data-delete-deck-form-feedback></div>
+                </div>
+                <div class="custom-modal__footer">
+                    <button type="button" class="secondary-button" data-close-delete-deck-modal-button>Cancel</button>
+                    <button
+                        type="submit"
+                        class="primary-button primary-button--success"
+                        style="background: var(--danger); box-shadow: 0 8px 18px rgba(186, 26, 26, 0.18);"
+                        data-delete-deck-submit-button
+                    >
+                        Delete
+                    </button>
+                </div>
+            </form>
+        </dialog>
 
         <section class="section-header">
             <div>
