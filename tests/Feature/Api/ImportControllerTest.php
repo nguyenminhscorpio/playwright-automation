@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Api;
 
 use App\Models\Card;
 use App\Models\ImportJob;
@@ -23,7 +23,7 @@ class ImportControllerTest extends TestCase
 
     public function test_preview_txt_import_creates_import_job_and_rows(): void
     {
-        $samplePath = base_path('app/Spec/Bussiness-Rule/Study-Session-03-04-05/Sample-File-Import/1000 Cụm từ Tiếng Anh.txt');
+        $samplePath = base_path('app/Spec/Phase/Study-Session-Phase-1/Sample-File-Import/1000 Cụm từ Tiếng Anh.txt');
         $file = UploadedFile::fake()->createWithContent('1000-cu-tieng-anh.txt', file_get_contents($samplePath));
 
         $response = $this->postJson('/api/imports/txt/preview', [
@@ -55,7 +55,7 @@ class ImportControllerTest extends TestCase
 
     public function test_confirm_txt_import_creates_notes_and_cards_and_marks_duplicates_as_skipped(): void
     {
-        $samplePath = base_path('app/Spec/Bussiness-Rule/Study-Session-03-04-05/Sample-File-Import/1000 Cụm từ Tiếng Anh.txt');
+        $samplePath = base_path('app/Spec/Phase/Study-Session-Phase-1/Sample-File-Import/1000 Cụm từ Tiếng Anh.txt');
         $content = file_get_contents($samplePath);
         $file = UploadedFile::fake()->createWithContent('1000-cu-tieng-anh.txt', $content);
 

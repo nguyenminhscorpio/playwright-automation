@@ -2,6 +2,7 @@
 
 <p align="center">
 <a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://github.com/nguyenminhscorpio/vibe-coding/actions/workflows/playwright.yml"><img src="https://github.com/nguyenminhscorpio/vibe-coding/actions/workflows/playwright.yml/badge.svg" alt="Playwright Tests"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
@@ -40,6 +41,31 @@ php artisan boost:install
 ```
 
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+
+## E2E Testing On CI
+
+Playwright end-to-end tests run automatically on GitHub Actions through [.github/workflows/playwright.yml](.github/workflows/playwright.yml).
+
+The workflow will:
+
+- install Composer and Node dependencies
+- prepare the Laravel app with `.env`, app key, SQLite database, and migrations
+- build frontend assets with Vite
+- run `npx playwright test`
+- upload `playwright-report/` and `test-results/` as workflow artifacts
+
+To review a failed run:
+
+1. Open the GitHub Actions run.
+2. Download the `playwright-report` artifact.
+3. Extract it and open `index.html`.
+
+For local E2E runs:
+
+```bash
+npm run test:e2e
+npm run show-report
+```
 
 ## Contributing
 

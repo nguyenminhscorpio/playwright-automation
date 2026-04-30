@@ -17,7 +17,7 @@ Tài liệu này hướng dẫn chi tiết các bước thực hiện để hoà
   - Giao diện dạng Bảng (Table) chuyên nghiệp.
   - Tìm kiếm thẻ (Search by front/back/description).
   - Lọc thẻ theo trạng thái (Filter by status).
-  - CRUD Thẻ: Tạo mới thủ công, Chỉnh sửa, Xóa thẻ.
+  - CRUD Thẻ: Tạo mới thủ công (Modal), Chỉnh sửa, Xóa thẻ.
   - Nút Import kết nối nhanh tới màn hình Import TXT.
 - **Study Session & TTS:**
   - Tích hợp biểu tượng Loa (TTS) cho mặt Front/Back.
@@ -44,7 +44,7 @@ Tài liệu này hướng dẫn chi tiết các bước thực hiện để hoà
 2. **Giai đoạn 2: Triển khai Deck Detail (Lõi quản lý)**
    - Dựng giao diện Table UI mới cho màn hình chi tiết bộ thẻ.
    - Kết nối Logic Search và Filter Status.
-   - Implement các Modal: Create Card, Edit Card, Delete Card.
+   - **Implement các Modal: Create Card (Manual), Edit Card, Delete Card.**
 
 3. **Giai đoạn 3: Triển khai Dashboard (Trải nghiệm người dùng)**
    - Dựng Layout Dashboard mới theo thiết kế hiện đại.
@@ -75,32 +75,47 @@ Tài liệu này hướng dẫn chi tiết các bước thực hiện để hoà
 ## 4. Checklist Thực hiện (Checklist cho AI)
 
 ### A. Deck Detail (Quản lý thẻ)
-- [ ] Cập nhật `CardRepository` hỗ trợ `search` và `filter status`.
-- [ ] Cập nhật `CardController@index` trả về dữ liệu phân trang chuẩn.
-- [ ] Sửa file `deck-detail.blade.php`:
-  - [ ] Thay đổi list view thành Table UI.
-  - [ ] Thêm input Search và dropdown Status.
-  - [ ] Thêm cột Actions và logic Edit/Delete.
-- [ ] Viết API/Controller cho `store`, `update`, `destroy` Card.
+- [x] Cập nhật `CardRepository` hỗ trợ `search` và `filter status`.
+- [x] Cập nhật `CardController@index` trả về dữ liệu phân trang chuẩn.
+- [x] Sửa file `deck-detail.blade.php`:
+  - [x] Thay đổi list view thành Table UI.
+  - [x] Thêm input Search và dropdown Status.
+  - [x] Xoá cột `DECK` vì dư thừa trong trang chi tiết.
+  - [x] Thêm cột `LAST REVIEWED`.
+  - [x] Cập nhật cột `NEXT` theo format ngày/giờ phải ôn lại.
+  - [x] Cập nhật CSS Table UI theo `DESIGN.md`.
+  - [x] Thêm cột Actions và các nút Sửa/Xóa.
+- [x] **Tạo Modal "Create New Card":** Form nhập tay Front/Back cho thẻ mới.
+- [x] **Tạo Modal "Edit Card":** Form chỉnh sửa nội dung thẻ hiện có.
+- [x] **Tạo Modal "Confirm Delete":** Xác nhận trước khi xóa thẻ.
+- [x] Viết API/Controller cho `store`, `update`, `destroy` Card.
+- [x] Link nút `Import` sang màn hình Import TXT và preselect deck hiện tại.
 
 ### B. Dashboard (Tổng quan)
-- [ ] Viết `DashboardController@index` gọi `DashboardStatsService`.
-- [ ] Tính toán Streak từ bảng `review_logs` hoặc `study_days`.
-- [ ] Sửa file `dashboard.blade.php`:
-  - [ ] Dựng khung UI mới theo `DESIGN.md`.
-  - [ ] Render Milestone Progress Bar.
-  - [ ] Render Active Decks với thông số "Learned / Total".
-- [ ] Thêm Modal "Create New Deck" với trường Description.
+- [x] Viết `DashboardController@index` gọi `DashboardStatsService`.
+- [x] Hiển thị Header chào `Welcome back, [Name]!`.
+- [x] Tính toán Streak từ bảng `review_logs` hoặc `study_days`.
+- [x] Sửa file `dashboard.blade.php`:
+  - [x] Dựng khung UI mới theo `DESIGN.md`.
+  - [x] Render Milestone Progress Bar.
+  - [x] Render khối `Quick Stats`.
+  - [x] Thay hiển thị `Cards/Notes/Imports` bằng `Learned / Total` trên Deck card.
+  - [x] Thêm nút/icon `Delete Deck` và logic xác nhận xóa.
+  - [x] Render Active Decks với thông số "Learned / Total".
+- [x] Thêm Modal "Create New Deck" với trường Description.
+- [x] Cập nhật API `GET /api/decks` trả về thông số learned/total.
+- [x] Cập nhật API Create Deck hỗ trợ trường `description`.
 
 ### C. Study & TTS
-- [ ] Viết file `resources/js/tts.js` sử dụng `window.speechSynthesis`.
-- [ ] Thêm nút Loa vào `study/front.blade.php` và `study/answer.blade.php`.
-- [ ] Xóa code hiển thị `front_plain_text` lặp lại.
+- [x] Viết file `resources/js/tts.js` sử dụng `window.speechSynthesis`.
+- [x] Dùng dữ liệu `plain_text` cho TTS để tránh đọc nhầm HTML.
+- [x] Thêm nút Loa vào `study/front.blade.php` và `study/answer.blade.php`.
+- [x] Xóa code hiển thị `front_plain_text` lặp lại.
 
 ### D. Import Screen
-- [ ] Sửa CSS `imports.blade.php` để ẩn text mặc định của input file.
-- [ ] Thêm class màu xanh và thuộc tính `disabled` cho nút Confirm sau khi bấm.
-- [ ] Thêm `mt-4` hoặc khoảng cách cho các alert messages.
+- [x] Sửa CSS `imports.blade.php` để ẩn text mặc định của input file.
+- [x] Thêm class màu xanh và thuộc tính `disabled` cho nút Confirm sau khi bấm.
+- [x] Thêm `mt-4` hoặc khoảng cách cho các alert messages.
 
 ---
 

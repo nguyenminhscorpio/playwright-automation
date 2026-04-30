@@ -4,9 +4,17 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "pretest:e2e": "node scripts/cleanup-playwright-report-port.mjs",
+        "test:e2e": "playwright test",
+        "show-report": "node scripts/show-playwright-report-clean.mjs",
+        "test:e2e:dashboard:report": "node scripts/run-playwright-report.mjs",
+        "test:e2e:headed": "playwright test --headed",
+        "test:e2e:ui": "playwright test --ui",
+        "codegen": "playwright codegen http://localhost:8000/dashboard"
     },
     "devDependencies": {
+        "@playwright/test": "^1.59.1",
         "@tailwindcss/vite": "^4.0.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^3.0.0",
