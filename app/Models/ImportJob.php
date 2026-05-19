@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -49,5 +51,27 @@ class ImportJob extends Model
     public function rows(): HasMany
     {
         return $this->hasMany(ImportJobRow::class);
+    }
+
+    public function startedAtForDisplay(): ?CarbonInterface
+    {
+        return $this->utcTimestampForDisplay('started_at');
+    }
+
+    public function finishedAtForDisplay(): ?CarbonInterface
+    {
+        return $this->utcTimestampForDisplay('finished_at');
+    }
+
+    private function utcTimestampForDisplay(string $attribute): ?CarbonInterface
+    {
+        $rawValue = $this->getRawOriginal($attribute);
+
+        if (blank($rawValue)) {
+            return null;
+        }
+
+        return Carbon::parse($rawValue, 'UTC')
+            ->setTimezone(config('app.display_timezone'));
     }
 }

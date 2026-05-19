@@ -69,6 +69,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Display Timezone
+    |--------------------------------------------------------------------------
+    |
+    | Import job timestamps are currently stored in UTC. This timezone is used
+    | when presenting those timestamps in the UI so the dashboard reflects the
+    | machine's local/system time instead of raw UTC.
+    |
+    */
+
+    'display_timezone' => env(
+        'APP_DISPLAY_TIMEZONE',
+        ini_get('date.timezone') ?: date_default_timezone_get()
+    ),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

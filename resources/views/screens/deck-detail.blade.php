@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="deck-detail-container" data-deck-detail-app data-deck-id="{{ $deck->id }}" data-user-id="{{ $deckDetailUserId ?? '' }}" data-total-cards="{{ $cards->total() }}">
-    <div class="breadcrumb">
+    <div class="breadcrumb stagger-1" data-reveal>
         <a href="{{ route('dashboard') }}">My Decks</a>
         <span>/</span>
         <select class="deck-switcher" data-deck-switcher>
@@ -12,7 +12,7 @@
         </select>
     </div>
 
-    <div class="card-manager-header">
+    <div class="card-manager-header stagger-2" data-reveal>
         <div>
             <h1 class="card-manager-title">Card Management <span class="card-manager-deck-badge">{{ $deck->name }}</span></h1>
             <p class="hero__subtitle">{{ $deck->description ?: 'Manage cards, search quickly, and jump into import for this deck.' }}</p>
@@ -33,7 +33,7 @@
         </div>
     </div>
 
-    <form method="GET" action="{{ route('decks.show', $deck) }}" class="card-manager-toolbar">
+    <form method="GET" action="{{ route('decks.show', $deck) }}" class="card-manager-toolbar stagger-3" data-reveal>
         <div class="toolbar-filters toolbar-filters--grow">
             <label class="toolbar-search">
                 <span class="material-symbols-outlined">search</span>
@@ -54,7 +54,7 @@
         </div>
     </form>
 
-    <div class="table-container">
+    <div class="table-container stagger-4" data-reveal>
         <table class="card-table">
             <thead>
                 <tr>
@@ -140,8 +140,8 @@
             </div>
             <div class="custom-modal__body">
                 <input type="hidden" data-card-id-input />
-                <label class="import-field"><span class="import-field__label">Front</span><textarea class="import-file-input" rows="4" data-card-front-input required></textarea></label>
-                <label class="import-field"><span class="import-field__label">Back</span><textarea class="import-file-input" rows="4" data-card-back-input required></textarea></label>
+                <label class="modal-field"><span class="modal-field__label">Front</span><textarea class="modal-input" rows="4" data-card-front-input required></textarea></label>
+                <label class="modal-field"><span class="modal-field__label">Back</span><textarea class="modal-input" rows="4" data-card-back-input required></textarea></label>
                 <div class="study-feedback is-hidden" data-card-form-feedback></div>
             </div>
             <div class="custom-modal__footer">
@@ -164,7 +164,7 @@
             </div>
             <div class="custom-modal__footer">
                 <button type="button" class="secondary-button" data-close-delete-modal-button>Cancel</button>
-                <button type="submit" class="primary-button primary-button--success" style="background: var(--danger); box-shadow: 0 8px 18px rgba(186, 26, 26, 0.18);" data-delete-card-submit-button>Delete</button>
+                <button type="submit" class="primary-button" style="background: var(--danger); box-shadow: 0 4px 14px rgba(185, 28, 28, 0.25);" data-delete-card-submit-button>Delete</button>
             </div>
         </form>
     </dialog>

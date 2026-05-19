@@ -47,7 +47,7 @@ class ScreenController extends Controller
                     'status' => $job->status,
                     'success_rows' => $job->success_rows,
                     'failed_rows' => $job->failed_rows,
-                    'finished_at' => $job->finished_at?->format('Y-m-d H:i') ?? '-',
+                    'finished_at' => $job->finishedAtForDisplay()?->format('Y-m-d H:i') ?? '-',
                 ])
                 ->all() ?? [],
         ]);

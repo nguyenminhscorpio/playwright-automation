@@ -212,8 +212,8 @@ class TxtImportService
                 'total_rows' => $job->total_rows,
                 'success_rows' => $job->success_rows,
                 'failed_rows' => $job->failed_rows,
-                'started_at' => $job->started_at?->toIso8601String(),
-                'finished_at' => $job->finished_at?->toIso8601String(),
+                'started_at' => $job->startedAtForDisplay()?->toIso8601String(),
+                'finished_at' => $job->finishedAtForDisplay()?->toIso8601String(),
                 'error_summary' => $job->error_summary,
             ])
             ->all();
@@ -237,8 +237,8 @@ class TxtImportService
             'total_rows' => $importJob->total_rows,
             'success_rows' => $importJob->success_rows,
             'failed_rows' => $importJob->failed_rows,
-            'started_at' => $importJob->started_at?->toIso8601String(),
-            'finished_at' => $importJob->finished_at?->toIso8601String(),
+            'started_at' => $importJob->startedAtForDisplay()?->toIso8601String(),
+            'finished_at' => $importJob->finishedAtForDisplay()?->toIso8601String(),
             'error_summary' => $importJob->error_summary,
         ];
     }

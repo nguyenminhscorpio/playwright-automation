@@ -131,13 +131,13 @@
                     </button>
                 </div>
                 <div class="custom-modal__body">
-                    <label class="import-field">
-                        <span class="import-field__label">Deck Name</span>
-                        <input type="text" id="new-deck-name" class="import-file-input" placeholder="e.g. English Vocabulary" required autocomplete="off" />
+                    <label class="modal-field">
+                        <span class="modal-field__label">Deck Name</span>
+                        <input type="text" id="new-deck-name" class="modal-input" placeholder="e.g. English Vocabulary" required autocomplete="off" />
                     </label>
-                    <label class="import-field">
-                        <span class="import-field__label">Description</span>
-                        <textarea id="new-deck-description" class="import-file-input" rows="4" placeholder="Short description for this deck"></textarea>
+                    <label class="modal-field">
+                        <span class="modal-field__label">Description</span>
+                        <textarea id="new-deck-description" class="modal-input" rows="4" placeholder="Short description for this deck"></textarea>
                     </label>
                 </div>
                 <div class="custom-modal__footer">

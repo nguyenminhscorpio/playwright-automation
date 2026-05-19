@@ -333,10 +333,46 @@ const setupImport = () => {
     const feedback = app.querySelector('[data-import-feedback]');
     const rowsBody = app.querySelector('[data-import-rows-body]');
     const fileMeta = app.querySelector('[data-import-file-meta]');
+    const dropzone = document.getElementById('import-dropzone');
+    const dropzoneFilename = app.querySelector('[data-dropzone-filename]');
     let importJobId = null;
     let confirmed = false;
     let rows = [];
     let filter = 'all';
+
+    // --- Dropzone: show filename on file select ---
+    const updateDropzoneFile = (file) => {
+        if (!file || !dropzone) return;
+        dropzone.classList.add('has-file');
+        if (dropzoneFilename) {
+            dropzoneFilename.textContent = `✓ ${file.name}`;
+            dropzoneFilename.classList.remove('is-hidden');
+        }
+    };
+
+    fileInput?.addEventListener('change', () => {
+        if (fileInput.files?.[0]) updateDropzoneFile(fileInput.files[0]);
+    });
+
+    // --- Drag & Drop ---
+    if (dropzone) {
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('is-dragover');
+        });
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('is-dragover'));
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('is-dragover');
+            const file = e.dataTransfer?.files?.[0];
+            if (file && fileInput) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                updateDropzoneFile(file);
+            }
+        });
+    }
 
     const renderRows = () => {
         const visible = rows.filter((row) => {
@@ -353,8 +389,10 @@ const setupImport = () => {
 
     app.querySelectorAll('[data-import-filter]').forEach((button) => button.addEventListener('click', () => {
         filter = button.dataset.importFilter || 'all';
-        app.querySelectorAll('[data-import-filter]').forEach((item) => item.classList.remove('is-mode-active'));
-        button.classList.add('is-mode-active');
+        app.querySelectorAll('[data-import-filter]').forEach((item) => {
+            item.classList.remove('is-mode-active', 'import-tab--active');
+        });
+        button.classList.add('is-mode-active', 'import-tab--active');
         renderRows();
     }));
 
@@ -526,10 +564,23 @@ const setupStudy = async () => {
     }
 };
 
+const setupRevealAnimations = () => {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('[data-reveal]').forEach((el) => observer.observe(el));
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     setupCreateDeck();
     setupDashboard();
     setupDeckDetail();
     setupImport();
+    setupRevealAnimations();
     await setupStudy();
 });
