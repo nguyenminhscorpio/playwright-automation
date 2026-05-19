@@ -29,10 +29,10 @@ export default defineConfig({
   ],
   webServer: canBootLaravelCli
     ? {
-        command: `"${phpExecutable}" artisan serve --host=127.0.0.1 --port=8000`,
-        port: 8000,
-        reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
-      }
+      command: `"${phpExecutable}" artisan serve --host=127.0.0.1 --port=8000`,
+      port: 8000,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+    }
     : undefined,
 });
