@@ -193,14 +193,186 @@ webServer: {
 
 ## 6. Cách xem kết quả trên GitHub
 
+**URL trực tiếp của dự án:**
+
 ```
-GitHub repo
-  └── Actions tab
-        └── Playwright Tests (workflow name)
-              └── [tên commit/PR]
-                    ├── Jobs: test ✅/❌
-                    │     └── Steps: xem chi tiết từng bước
-                    └── Artifacts:
-                          ├── playwright-report/     ← mở index.html để xem
-                          └── playwright-test-results/ ← screenshots/videos khi fail
+# Danh sách tất cả CI runs
+https://github.com/nguyenminhscorpio/playwright-automation/actions
+
+# Chỉ xem workflow Playwright Tests
+https://github.com/nguyenminhscorpio/playwright-automation/actions/workflows/playwright.yml
+```
+
+**Điều hướng trên GitHub:**
+
+```
+Bước 1: Vào tab "Actions" (thanh menu trên cùng của repo)
+         → Thấy danh sách các lần chạy, mỗi dòng là 1 commit/PR
+
+Bước 2: Click vào 1 run (dòng gần nhất)
+         → Thấy trang "Summary" của run đó
+
+Bước 3: Trang Summary có 2 vùng quan trọng:
+   ┌─────────────────────────────────────────────────┐
+   │  Jobs (phần trên)                               │
+   │  └── test ✅ / ❌                               │
+   │       → Click vào để thấy log từng step         │
+   │                                                 │
+   │  Artifacts (phần dưới cùng trang)               │
+   │  ├── playwright-report        [Download ⬇]      │
+   │  └── playwright-test-results  [Download ⬇]      │
+   └─────────────────────────────────────────────────┘
+
+Bước 4: Download artifact → giải nén → mở file:
+   playwright-report/index.html        → HTML report đẹp, có filter
+   test-results/.../test-failed-1.png  → screenshot lúc fail
+   test-results/.../video.webm         → video recording
+   test-results/.../trace.zip          → mở bằng: npx playwright show-trace trace.zip
+```
+
+---
+
+## 7. Đọc Artifacts sau khi download
+
+```
+playwright-report.zip (giải nén)
+  └── index.html          ← mở bằng trình duyệt
+       ├── Filter: All / Passed / Failed / Flaky / Skipped
+       ├── Mỗi test: tên, thời gian chạy, status
+       └── Click test fail → thấy:
+            ├── Error message + stack trace
+            ├── Screenshot (nếu có)
+            └── Nút "Trace" để xem từng bước
+
+playwright-test-results.zip (giải nén)
+  └── [tên-test-fail]-chromium/
+       ├── test-failed-1.png    ← screenshot lúc fail
+       ├── video.webm           ← video toàn bộ test
+       ├── trace.zip            ← mở bằng npx playwright show-trace
+       └── error-context.md     ← mô tả lỗi dạng text
+```
+
+**Xem trace locally:**
+```bash
+npx playwright show-trace test-results/[folder]/trace.zip
+# → Mở Playwright Trace Viewer trong browser
+# → Thấy từng action, network request, DOM snapshot tại thời điểm fail
+```
+
+---
+
+## 8. Full YAML với annotation đầy đủ
+
+```yaml
+name: Playwright Tests      # Tên hiển thị trên tab Actions
+
+on:
+  push:                     # Chạy khi push lên BẤT KỲ branch
+  pull_request:             # Chạy khi tạo/update PR
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Máy ảo GitHub cung cấp miễn phí (Linux)
+
+    steps:
+      # ── BƯỚC 1: Lấy code về ───────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── BƯỚC 2: Cài Node.js ──────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm          # Cache ~/.npm → lần chạy sau skip download
+
+      # ── BƯỚC 3: Cài PHP ──────────────────────────────────────────────
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, pdo_sqlite, sqlite3
+          # pdo_sqlite + sqlite3: để Laravel dùng SQLite thay MySQL
+          coverage: none      # Không đo code coverage → nhanh hơn
+
+      # ── BƯỚC 4: Cài PHP packages ─────────────────────────────────────
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+        # --no-interaction: không hỏi gì cả
+        # --prefer-dist: tải zip thay vì clone git → nhanh hơn
+
+      # ── BƯỚC 5: Cài JS packages ──────────────────────────────────────
+      - name: Install Node dependencies
+        run: npm ci
+        # ci = clean install: dùng đúng package-lock.json
+        # Khác npm install: không tự update lock file
+
+      # ── BƯỚC 6: Cài Chromium cho Playwright ──────────────────────────
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        # --with-deps: cài thêm system libs (fonts, libglib...)
+        # Chỉ chromium: tiết kiệm ~500MB so với cài cả 3 browser
+
+      # ── BƯỚC 7: Chuẩn bị Laravel ─────────────────────────────────────
+      - name: Prepare Laravel environment
+        run: |
+          cp .env.example .env
+          mkdir -p database
+          touch database/database.sqlite   # Tạo file DB rỗng
+          php artisan key:generate         # Generate APP_KEY vào .env
+          php artisan migrate --force      # --force: bỏ qua confirm production
+          php artisan config:clear         # Clear cache cũ
+
+      # ── BƯỚC 8: Build JS/CSS ──────────────────────────────────────────
+      - name: Build frontend assets
+        run: npm run build
+        # Vite build → tạo public/build/ để Laravel phục vụ
+
+      # ── BƯỚC 9: CHẠY TESTS ───────────────────────────────────────────
+      - name: Run Playwright tests
+        env:
+          CI: true                         # Kích hoạt CI mode trong playwright.config.ts
+          APP_URL: http://127.0.0.1:8000
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8000
+          PHP_EXECUTABLE: php              # Playwright dùng để boot 'php artisan serve'
+        run: npx playwright test
+        # Playwright tự boot: php artisan serve --port=8000
+        # Rồi mới chạy tất cả test files trong tests/e2e/
+
+      # ── BƯỚC 10: Lưu HTML Report ──────────────────────────────────────
+      - name: Upload Playwright report
+        if: always()                       # Chạy DÙ step trước pass hay fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report          # Tên file zip trên GitHub
+          path: playwright-report/         # Thư mục Playwright tạo ra
+          if-no-files-found: ignore        # Không báo lỗi nếu không có
+
+      # ── BƯỚC 11: Lưu Screenshots/Videos khi fail ──────────────────────
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/              # Chứa .png, .webm, trace.zip khi fail
+          if-no-files-found: ignore
+```
+
+---
+
+## 9. Logic quyết định CI pass hay fail
+
+```
+npx playwright test chạy xong
+    │
+    ├── TẤT CẢ test pass → exit code 0 → CI ✅ PASS
+    │
+    └── CÓ test fail
+          ├── Retry lần 1 (tự động, CI=true retries: 2)
+          │     ├── Pass → CI ✅ PASS (đánh dấu "Flaky")
+          │     └── Fail → Retry lần 2
+          │                 ├── Pass → CI ✅ PASS (đánh dấu "Flaky")
+          │                 └── Fail → exit code 1 → CI ❌ FAIL
+          │
+          └── PR bị block merge (nếu có branch protection rule)
 ```
