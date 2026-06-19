@@ -2,11 +2,9 @@
 
 namespace App\Services\Import;
 
-use App\Models\Card;
 use App\Models\Deck;
 use App\Models\ImportJob;
 use App\Models\ImportJobRow;
-use App\Models\Note;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -42,8 +40,13 @@ class TxtImportService
                     : null,
             ]);
 
-            foreach ($parsed['rows'] as $row) {
-                $job->rows()->create($row);
+            // FIX: batch insert all rows instead of N individual creates
+            $rowsToInsert = array_map(
+                static fn (array $row): array => array_merge($row, ['import_job_id' => $job->id]),
+                $parsed['rows']
+            );
+            foreach (array_chunk($rowsToInsert, 500) as $chunk) {
+                DB::table('import_job_rows')->insert($chunk);
             }
 
             return $job->load('rows');
@@ -95,99 +98,146 @@ class TxtImportService
         }
 
         $result = DB::transaction(function () use ($user, $importJob): array {
-            $insertedRows = 0;
-            $skippedRows = 0;
-            $errors = [];
+            // FIX 1: Pre-load all existing notes ONCE into a hash set for O(1) lookup.
+            // Old code called Note::query()->get() on every single row — catastrophic N+1.
+            $existingNoteKeys = DB::table('notes')
+                ->where('user_id', $user->id)
+                ->where('deck_id', $importJob->deck_id)
+                ->get(['front_plain_text', 'back_plain_text'])
+                ->mapWithKeys(fn (object $note): array => [
+                    $this->parser->normalizeForDuplicate($note->front_plain_text ?? '') . '||' .
+                    $this->parser->normalizeForDuplicate($note->back_plain_text ?? '') => true,
+                ])
+                ->all();
+
+            $insertedRows   = 0;
+            $skippedRows    = 0;
+            $errors         = [];
+            $cardsToInsert  = [];
+            $importedRowIds = [];
+            $skippedRowIds  = [];
+            $now            = now()->toDateTimeString();
 
             foreach ($importJob->rows as $row) {
                 if ($row->status === 'invalid') {
                     $errors[] = [
-                        'row_number' => $row->row_number,
+                        'row_number'    => $row->row_number,
                         'error_message' => $row->error_message,
                     ];
                     continue;
                 }
 
-                $isDuplicate = $this->isDuplicate($user, $importJob->deck_id, $row->parsed_front ?? '', $row->parsed_back ?? '');
+                $frontText = $row->parsed_front ?? '';
+                $backText  = $row->parsed_back  ?? '';
 
-                if ($isDuplicate) {
-                    $row->forceFill([
-                        'status' => 'skipped',
-                        'error_message' => 'Duplicate row in current user/deck scope.',
-                    ])->save();
+                $key = $this->parser->normalizeForDuplicate($frontText) . '||' .
+                       $this->parser->normalizeForDuplicate($backText);
 
+                if (isset($existingNoteKeys[$key])) {
+                    $skippedRowIds[] = $row->id;
                     $skippedRows++;
                     continue;
                 }
 
-                $frontText = $row->parsed_front ?? '';
-                $backText = $row->parsed_back ?? '';
+                // Prevent duplicates within the same import batch
+                $existingNoteKeys[$key] = true;
 
-                $note = Note::query()->create([
-                    'user_id' => $user->id,
-                    'deck_id' => $importJob->deck_id,
-                    'front_text' => $frontText,
-                    'back_text' => $backText,
+                // FIX 2: Use DB::table to avoid Eloquent model overhead per row.
+                // insertGetId() still needed because card requires the note ID.
+                $noteId = DB::table('notes')->insertGetId([
+                    'user_id'          => $user->id,
+                    'deck_id'          => $importJob->deck_id,
+                    'front_text'       => $frontText,
+                    'back_text'        => $backText,
                     'front_plain_text' => $this->parser->toPlainText($frontText),
-                    'back_plain_text' => $this->parser->toPlainText($backText),
-                    'source_type' => 'anki_txt_import',
+                    'back_plain_text'  => $this->parser->toPlainText($backText),
+                    'source_type'      => 'anki_txt_import',
                     'source_file_name' => $importJob->file_name,
-                    'source_raw_line' => $row->raw_content,
+                    'source_raw_line'  => $row->raw_content,
+                    'created_at'       => $now,
+                    'updated_at'       => $now,
                 ]);
 
-                Card::query()->create([
-                    'note_id' => $note->id,
-                    'user_id' => $user->id,
-                    'deck_id' => $importJob->deck_id,
-                    'state' => 'new',
-                    'current_step' => 0,
-                    'learning_steps_json' => [1, 10],
-                    'relearning_steps_json' => [10],
-                    'due_at' => null,
-                    'last_reviewed_at' => null,
-                    'stability' => 1.0,
-                    'difficulty' => 5.0,
-                    'elapsed_days' => 0,
-                    'scheduled_days' => 0,
-                    'reps' => 0,
-                    'lapses' => 0,
-                    'last_rating' => null,
-                    'is_suspended' => false,
-                ]);
+                // Collect card data for batch insert at the end
+                $cardsToInsert[] = [
+                    'note_id'               => $noteId,
+                    'user_id'               => $user->id,
+                    'deck_id'               => $importJob->deck_id,
+                    'state'                 => 'new',
+                    'current_step'          => 0,
+                    'learning_steps_json'   => json_encode([1, 10]),
+                    'relearning_steps_json' => json_encode([10]),
+                    'due_at'                => null,
+                    'last_reviewed_at'      => null,
+                    'stability'             => 1.0,
+                    'difficulty'            => 5.0,
+                    'elapsed_days'          => 0,
+                    'scheduled_days'        => 0,
+                    'reps'                  => 0,
+                    'lapses'                => 0,
+                    'last_rating'           => null,
+                    'is_suspended'          => false,
+                    'created_at'            => $now,
+                    'updated_at'            => $now,
+                ];
 
-                $row->forceFill([
-                    'status' => 'imported',
-                    'error_message' => null,
-                ])->save();
-
+                $importedRowIds[] = $row->id;
                 $insertedRows++;
+
+                // FIX 3: Flush cards in chunks of 500 to keep memory bounded
+                if (count($cardsToInsert) >= 500) {
+                    DB::table('cards')->insert($cardsToInsert);
+                    $cardsToInsert = [];
+                }
             }
 
+            // Flush remaining cards
+            if ($cardsToInsert !== []) {
+                DB::table('cards')->insert($cardsToInsert);
+            }
+
+            // FIX 4: Batch update row statuses — replaces N individual $row->save() calls
+            foreach (array_chunk($importedRowIds, 1000) as $chunk) {
+                DB::table('import_job_rows')
+                    ->whereIn('id', $chunk)
+                    ->update(['status' => 'imported', 'error_message' => null]);
+            }
+            foreach (array_chunk($skippedRowIds, 1000) as $chunk) {
+                DB::table('import_job_rows')
+                    ->whereIn('id', $chunk)
+                    ->update([
+                        'status'        => 'skipped',
+                        'error_message' => 'Duplicate row in current user/deck scope.',
+                    ]);
+            }
+
+            $invalidCount = $importJob->rows->where('status', 'invalid')->count();
+
             $importJob->forceFill([
-                'status' => 'imported',
-                'success_rows' => $insertedRows,
-                'failed_rows' => $importJob->rows->where('status', 'invalid')->count() + $skippedRows,
-                'finished_at' => now(),
-                'error_summary' => empty($errors) && $skippedRows === 0
+                'status'        => 'imported',
+                'success_rows'  => $insertedRows,
+                'failed_rows'   => $invalidCount + $skippedRows,
+                'finished_at'   => now(),
+                'error_summary' => ($insertedRows === $importJob->total_rows)
                     ? null
                     : sprintf(
                         'Imported: %d, skipped: %d, invalid: %d',
                         $insertedRows,
                         $skippedRows,
-                        $importJob->rows->where('status', 'invalid')->count()
+                        $invalidCount
                     ),
             ])->save();
 
             return [
                 'import_job_id' => $importJob->id,
                 'inserted_rows' => $insertedRows,
-                'skipped_rows' => $skippedRows,
-                'errors' => $errors,
-                'summary' => [
-                    'total' => $importJob->total_rows,
+                'skipped_rows'  => $skippedRows,
+                'errors'        => $errors,
+                'summary'       => [
+                    'total'    => $importJob->total_rows,
                     'imported' => $insertedRows,
-                    'skipped' => $skippedRows,
-                    'invalid' => $importJob->rows->where('status', 'invalid')->count(),
+                    'skipped'  => $skippedRows,
+                    'invalid'  => $invalidCount,
                 ],
             ];
         });
@@ -344,21 +394,6 @@ class TxtImportService
         }
 
         return $warnings;
-    }
-
-    private function isDuplicate(User $user, int $deckId, string $frontText, string $backText): bool
-    {
-        $normalizedFront = $this->parser->normalizeForDuplicate($frontText);
-        $normalizedBack = $this->parser->normalizeForDuplicate($backText);
-
-        return Note::query()
-            ->where('user_id', $user->id)
-            ->where('deck_id', $deckId)
-            ->get(['front_text', 'back_text'])
-            ->contains(function (Note $note) use ($normalizedFront, $normalizedBack): bool {
-                return $this->parser->normalizeForDuplicate($note->front_text) === $normalizedFront
-                    && $this->parser->normalizeForDuplicate($note->back_text) === $normalizedBack;
-            });
     }
 
     private function assertDeckOwnership(User $user, Deck $deck): void
