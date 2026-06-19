@@ -34,8 +34,20 @@ fi
 if [ -z "$DOMAIN" ] || [ "$DOMAIN" = "_" ]; then
   DOMAIN="_"
   echo -e "${YELLOW}No domain specified. Setting up default Nginx block for IP access.${NC}"
-  # Attempt to get public IP
-  PUBLIC_IP=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/public-ipv4 || curl -s --connect-timeout 3 https://ifconfig.me || echo "your-server-ip")
+  # Attempt to get public IP (IMDSv2 token-based, then IMDSv1 fallback, then ifconfig.me)
+  TOKEN=$(curl -s --connect-timeout 2 -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" 2>/dev/null || true)
+  if [ -n "$TOKEN" ]; then
+    PUBLIC_IP=$(curl -s --connect-timeout 3 -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || true)
+  fi
+  if [ -z "$PUBLIC_IP" ]; then
+    PUBLIC_IP=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null || true)
+  fi
+  if [ -z "$PUBLIC_IP" ]; then
+    PUBLIC_IP=$(curl -s --connect-timeout 3 https://ifconfig.me 2>/dev/null || true)
+  fi
+  if [ -z "$PUBLIC_IP" ]; then
+    PUBLIC_IP="localhost"
+  fi
   APP_URL="http://$PUBLIC_IP"
 else
   APP_URL="https://$DOMAIN"
@@ -139,7 +151,10 @@ sed -i "s|^APP_URL=.*|APP_URL=$APP_URL|g" "$APP_PATH/.env"
 echo -e "${YELLOW}Installing dependencies and building assets...${NC}"
 # Allow Composer to run as root for system-wide deploy setup
 export COMPOSER_ALLOW_SUPERUSER=1
-composer install --no-dev --optimize-autoloader --no-interaction
+composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
+# Run post-install scripts manually now that .env is properly configured
+php artisan package:discover --ansi
 
 # Generate App Key if not set
 php artisan key:generate --force
