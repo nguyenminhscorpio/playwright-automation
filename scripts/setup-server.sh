@@ -58,7 +58,6 @@ dnf install -y \
   php8.3-fpm \
   php8.3-common \
   php8.3-pdo \
-  php8.3-sqlite3 \
   php8.3-xml \
   php8.3-mbstring \
   php8.3-gd \
@@ -67,7 +66,8 @@ dnf install -y \
   php8.3-sodium \
   php8.3-process \
   php8.3-bcmath \
-  php8.3-zip
+  php8.3-zip \
+  sqlite
 
 # Verify PHP installation
 php -v
