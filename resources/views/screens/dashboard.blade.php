@@ -1,160 +1,231 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $hour = now()->hour;
+        $greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
+        $progressPercent = $dashboardStats['monthly_goal'] > 0
+            ? min(100, (int) round(($dashboardStats['monthly_learned'] / $dashboardStats['monthly_goal']) * 100))
+            : 0;
+        $firstDeck = $dashboardDecks[0] ?? null;
+    @endphp
+
     <section class="page-section" data-dashboard-app data-dashboard-user-id="{{ $dashboardUserId ?? '' }}">
-        <div class="hero">
+
+        {{-- ── Greeting header ──────────────────────────────── --}}
+        <div class="dash-greeting">
             <div>
-                <h1 class="hero__title">Welcome back, {{ $dashboardUserName }}</h1>
-                <p class="hero__subtitle">Track your streak, monthly milestone, and the decks that need attention most today.</p>
+                <h1 class="dash-greeting__title">{{ $greeting }}, {{ $dashboardUserName }} 👋</h1>
+                <p class="dash-greeting__sub">Track your streak, review due cards, and manage your decks.</p>
+            </div>
+            <div class="dash-greeting__actions">
+                <a href="{{ route('study.front', $firstDeck ? ['deck_id' => $firstDeck['id']] : []) }}"
+                   class="dash-btn dash-btn--primary">
+                    <span class="material-symbols-outlined">school</span>
+                    Study Now
+                </a>
+                <a href="{{ route('imports.index') }}" class="dash-btn">
+                    <span class="material-symbols-outlined">upload_file</span>
+                    Import
+                </a>
             </div>
         </div>
 
-        <div class="stats-grid">
-            <article class="stat-card stat-card--warm">
-                <div class="stat-card__header">
-                    <div class="stat-card__icon stat-card__icon--gold"><span class="material-symbols-outlined">local_fire_department</span></div>
-                    <span class="stat-card__label">Daily Streak</span>
+        {{-- ── Stat cards ────────────────────────────────────── --}}
+        <div class="dash-stats">
+
+            <article class="dash-stat dash-stat--streak">
+                <div class="dash-stat__icon">
+                    <span class="material-symbols-outlined">local_fire_department</span>
                 </div>
-                <div class="stat-card__value">{{ $dashboardStats['daily_streak'] }} <small>days</small></div>
-                <p class="stat-card__hint">Keep the chain alive with one more review session today.</p>
+                <div class="dash-stat__body">
+                    <span class="dash-stat__label">Daily Streak</span>
+                    <div class="dash-stat__val">{{ $dashboardStats['daily_streak'] }}<span class="dash-stat__unit">days</span></div>
+                    <p class="dash-stat__hint">Keep the chain alive today</p>
+                </div>
             </article>
 
-            <article class="stat-card">
-                <div class="stat-card__header">
-                    <div class="stat-card__icon"><span class="material-symbols-outlined">trophy</span></div>
-                    <span class="stat-card__label">Due Today</span>
+            <article class="dash-stat {{ $dashboardStats['totals']['due_count'] > 0 ? 'dash-stat--due' : '' }}">
+                <div class="dash-stat__icon">
+                    <span class="material-symbols-outlined">task_alt</span>
                 </div>
-                <div class="stat-card__value">{{ $dashboardStats['totals']['due_count'] }} <small>cards</small></div>
-                <p class="stat-card__hint">Cards in learning, relearning, or already due for review.</p>
+                <div class="dash-stat__body">
+                    <span class="dash-stat__label">Due Today</span>
+                    <div class="dash-stat__val">{{ $dashboardStats['totals']['due_count'] }}<span class="dash-stat__unit">cards</span></div>
+                    <p class="dash-stat__hint">Learning, relearning & review</p>
+                </div>
             </article>
 
-            <article class="stat-card">
-                <div class="stat-card__header">
-                    <div class="stat-card__icon"><span class="material-symbols-outlined">layers</span></div>
-                    <span class="stat-card__label">Decks</span>
+            <article class="dash-stat">
+                <div class="dash-stat__icon">
+                    <span class="material-symbols-outlined">layers</span>
                 </div>
-                <div class="stat-card__value">{{ $dashboardStats['totals']['deck_count'] }} <small>decks</small></div>
-                <p class="stat-card__hint">{{ $dashboardStats['totals']['card_count'] }} cards and {{ $dashboardStats['totals']['note_count'] }} notes in total.</p>
+                <div class="dash-stat__body">
+                    <span class="dash-stat__label">Library</span>
+                    <div class="dash-stat__val">{{ $dashboardStats['totals']['card_count'] }}<span class="dash-stat__unit">cards</span></div>
+                    <p class="dash-stat__hint">{{ $dashboardStats['totals']['deck_count'] }} decks · {{ $dashboardStats['totals']['note_count'] }} notes</p>
+                </div>
             </article>
-        </div>
 
-        <article class="stat-card stat-card--wide">
-            <div class="stat-card__header">
-                <div class="stat-card__icon"><span class="material-symbols-outlined">military_tech</span></div>
-                <span class="stat-card__label">Learning Milestone</span>
-            </div>
-            <div class="milestone">
-                <div>
-                    <div class="stat-card__value">{{ $dashboardStats['monthly_learned'] }} <small>/ {{ $dashboardStats['monthly_goal'] }}</small></div>
-                    <p class="muted-text">Cards graduated into review this month versus the current monthly goal.</p>
+            <article class="dash-stat">
+                <div class="dash-stat__icon">
+                    <span class="material-symbols-outlined">military_tech</span>
                 </div>
-                <div class="progress-block">
-                    <div class="progress-block__meta">
-                        <span>Monthly progress</span>
-                        <strong>
-                            @php($progressPercent = $dashboardStats['monthly_goal'] > 0 ? min(100, (int) round(($dashboardStats['monthly_learned'] / $dashboardStats['monthly_goal']) * 100)) : 0)
-                            {{ $progressPercent }}%
-                        </strong>
+                <div class="dash-stat__body">
+                    <span class="dash-stat__label">Monthly Goal</span>
+                    <div class="dash-stat__val">{{ $progressPercent }}<span class="dash-stat__unit">%</span></div>
+                    <div class="dash-stat__bar-wrap">
+                        <div class="dash-stat__bar-fill" style="width:{{ $progressPercent }}%"></div>
                     </div>
-                    <div class="progress"><div class="progress__bar" style="width: {{ $progressPercent }}%"></div></div>
+                    <p class="dash-stat__hint">{{ $dashboardStats['monthly_learned'] }} / {{ $dashboardStats['monthly_goal'] }} graduated</p>
                 </div>
-            </div>
-        </article>
+            </article>
 
-        <section class="section-header">
+        </div>
+
+        {{-- ── Active Decks ──────────────────────────────────── --}}
+        <div class="dash-section-hd">
             <div>
-                <h2 class="section-title">Active Decks</h2>
-                <p class="section-subtitle">Jump into review or open deck detail to manage cards directly.</p>
+                <h2 class="dash-section-hd__title">Active Decks</h2>
+                <p class="dash-section-hd__sub">Jump into a session or manage cards directly.</p>
             </div>
-            <a href="{{ route('imports.index') }}" class="text-action">Go To Import</a>
-        </section>
+            <button type="button" class="dash-btn" data-create-deck-button>
+                <span class="material-symbols-outlined">add</span>New Deck
+            </button>
+        </div>
 
-        <div class="deck-grid">
+        <div class="dash-deck-grid">
             @forelse ($dashboardDecks as $deck)
-                <article class="deck-card" data-deck-card data-deck-id="{{ $deck['id'] }}">
-                    <div class="deck-card__top">
-                        <div class="deck-card__icon"><span class="material-symbols-outlined">style</span></div>
-                        <div class="deck-card__top-actions">
-                            <span class="chip {{ $deck['due_count'] > 0 ? 'chip--amber' : 'chip--green' }}">{{ $deck['due_count'] > 0 ? $deck['due_count'] . ' due' : 'On track' }}</span>
-                            <button class="icon-button icon-button--small" type="button" data-delete-deck-button data-deck-name="{{ $deck['name'] }}" aria-label="Delete deck"><span class="material-symbols-outlined">delete</span></button>
+                <article class="dash-deck" data-deck-card data-deck-id="{{ $deck['id'] }}">
+
+                    <div class="dash-deck__top">
+                        <div class="dash-deck__icon">
+                            <span class="material-symbols-outlined">style</span>
+                        </div>
+                        <div class="dash-deck__badges">
+                            @if ($deck['due_count'] > 0)
+                                <span class="dash-badge dash-badge--due">{{ $deck['due_count'] }} due</span>
+                            @else
+                                <span class="dash-badge dash-badge--ok">
+                                    <span class="material-symbols-outlined">check</span>On track
+                                </span>
+                            @endif
+                        </div>
+                        <button class="dash-deck__del" type="button"
+                                data-delete-deck-button data-deck-name="{{ $deck['name'] }}"
+                                aria-label="Delete deck">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+
+                    <h3 class="dash-deck__title">{{ $deck['name'] }}</h3>
+                    <p class="dash-deck__desc">{{ $deck['description'] ?: 'No description provided.' }}</p>
+
+                    <div class="dash-deck__progress">
+                        <div class="dash-deck__progress-meta">
+                            <span>{{ $deck['learned_count'] }} learned</span>
+                            <span>{{ $deck['mastery_percent'] }}%</span>
+                        </div>
+                        <div class="dash-deck__progress-track">
+                            <div class="dash-deck__progress-fill" style="width:{{ $deck['mastery_percent'] }}%"></div>
                         </div>
                     </div>
-                    <h3 class="deck-card__title">{{ $deck['name'] }}</h3>
-                    <p class="deck-card__desc">{{ $deck['description'] ?: 'No description provided.' }}</p>
-                    <div class="progress-block">
-                        <div class="progress-block__meta">
-                            <span>Learned / Total</span>
-                            <strong>{{ $deck['learned_count'] }} / {{ $deck['total_count'] }}</strong>
-                        </div>
-                        <div class="progress"><div class="progress__bar" style="width: {{ $deck['mastery_percent'] }}%"></div></div>
+
+                    <div class="dash-deck__actions">
+                        <a href="{{ route('decks.show', ['deck' => $deck['id']]) }}"
+                           class="dash-deck__action-secondary">Manage</a>
+                        <a href="{{ route('study.front', ['deck_id' => $deck['id']]) }}"
+                           class="dash-deck__action-primary">
+                            <span class="material-symbols-outlined">play_arrow</span>
+                            Review {{ $deck['due_count'] > 0 ? $deck['due_count'].' cards' : 'Deck' }}
+                        </a>
                     </div>
-                    <div class="deck-card__actions">
-                        <a href="{{ route('decks.show', ['deck' => $deck['id']]) }}" class="secondary-button">Open Deck</a>
-                        <a href="{{ route('study.front', ['deck_id' => $deck['id']]) }}" class="primary-button">Review {{ $deck['due_count'] }} Cards</a>
-                    </div>
+
                 </article>
             @empty
-                <article class="deck-card">
-                    <h3 class="deck-card__title">No deck found</h3>
-                    <p class="deck-card__desc">Create a new deck or import a TXT file to start building your study system.</p>
-                    <div class="deck-card__actions"><button class="primary-button" type="button" data-create-deck-button>Create First Deck</button></div>
-                </article>
+                <div class="dash-empty">
+                    <span class="material-symbols-outlined dash-empty__icon">layers</span>
+                    <h3 class="dash-empty__title">No decks yet</h3>
+                    <p class="dash-empty__desc">Create your first deck or import a TXT file to start studying.</p>
+                    <button class="dash-btn dash-btn--primary" type="button" data-create-deck-button>
+                        <span class="material-symbols-outlined">add</span>Create First Deck
+                    </button>
+                </div>
             @endforelse
         </div>
 
+        {{-- ── Delete deck modal ────────────────────────────── --}}
         <dialog id="delete-deck-modal" class="custom-modal">
             <form method="dialog" class="custom-modal__form" data-delete-deck-form>
                 <div class="custom-modal__header">
-                    <h2>Delete Deck</h2>
-                    <button type="button" class="icon-button" data-close-delete-deck-modal-button><span class="material-symbols-outlined">close</span></button>
+                    <div class="custom-modal__header-icon"
+                         style="background:var(--danger-soft);color:var(--danger)">
+                        <span class="material-symbols-outlined">delete</span>
+                    </div>
+                    <div class="custom-modal__header-text">
+                        <h2>Delete Deck</h2>
+                        <p>This action cannot be undone.</p>
+                    </div>
+                    <button type="button" class="custom-modal__close" data-close-delete-deck-modal-button>
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
                 </div>
                 <div class="custom-modal__body">
-                    <p data-delete-deck-modal-message>Are you sure you want to delete this deck? This also removes its notes and cards.</p>
+                    <p data-delete-deck-modal-message
+                       style="font-size:0.92rem;color:var(--muted);margin:0">
+                        Are you sure you want to delete this deck? This also removes its notes and cards.
+                    </p>
                     <input type="hidden" data-delete-deck-id-input />
                     <div class="study-feedback is-hidden" data-delete-deck-form-feedback></div>
                 </div>
                 <div class="custom-modal__footer">
-                    <button type="button" class="secondary-button" data-close-delete-deck-modal-button>Cancel</button>
-                    <button
-                        type="submit"
-                        class="primary-button primary-button--success"
-                        style="background: var(--danger); box-shadow: 0 8px 18px rgba(186, 26, 26, 0.18);"
-                        data-delete-deck-submit-button
-                    >
-                        Delete
+                    <button type="button" class="modal-btn modal-btn--cancel"
+                            data-close-delete-deck-modal-button>Cancel</button>
+                    <button type="submit" class="modal-btn modal-btn--delete"
+                            data-delete-deck-submit-button>
+                        <span class="material-symbols-outlined">delete</span>Delete
                     </button>
                 </div>
             </form>
         </dialog>
 
-        <section class="section-header">
+        {{-- ── Recent Imports ────────────────────────────────── --}}
+        <div class="dash-section-hd">
             <div>
-                <h2 class="section-title">Recent Imports</h2>
-                <p class="section-subtitle">Quick audit trail for the latest import results.</p>
+                <h2 class="dash-section-hd__title">Recent Imports</h2>
+                <p class="dash-section-hd__sub">Audit trail for the latest import results.</p>
             </div>
-        </section>
-
-        <div class="import-table-wrap">
-            <table class="import-table">
-                <thead>
-                    <tr><th>Job</th><th>File</th><th>Deck</th><th>Status</th><th>Imported</th><th>Skipped/Invalid</th><th>Finished</th></tr>
-                </thead>
-                <tbody>
-                    @forelse ($recentImports as $job)
-                        <tr>
-                            <td>#{{ $job['id'] }}</td>
-                            <td>{{ $job['file_name'] }}</td>
-                            <td>{{ $job['deck_name'] }}</td>
-                            <td><span class="status-badge {{ $job['status'] === 'imported' ? 'status-badge--green' : 'status-badge--amber' }}">{{ $job['status'] }}</span></td>
-                            <td>{{ $job['success_rows'] }}</td>
-                            <td>{{ $job['failed_rows'] }}</td>
-                            <td>{{ $job['finished_at'] }}</td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="7" class="muted-text import-table__empty">No imports yet. Run one from the Import screen to see results here.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+            <a href="{{ route('imports.index') }}" class="dash-btn">
+                <span class="material-symbols-outlined">upload_file</span>New Import
+            </a>
         </div>
+
+        <div class="dash-imports">
+            @forelse ($recentImports as $job)
+                <div class="dash-import-row">
+                    <span class="dash-import-row__id">#{{ $job['id'] }}</span>
+                    <span class="dash-import-row__file">
+                        <span class="material-symbols-outlined">description</span>
+                        {{ $job['file_name'] }}
+                    </span>
+                    <span class="dash-import-row__deck">{{ $job['deck_name'] }}</span>
+                    <span class="dash-import-badge {{ $job['status'] === 'imported' ? 'dash-import-badge--ok' : 'dash-import-badge--warn' }}">
+                        {{ $job['status'] }}
+                    </span>
+                    <span class="dash-import-row__nums">
+                        <span class="dash-import-row__num dash-import-row__num--ok">↑{{ $job['success_rows'] }}</span>
+                        <span class="dash-import-row__num">↓{{ $job['failed_rows'] }}</span>
+                    </span>
+                    <span class="dash-import-row__time">{{ $job['finished_at'] }}</span>
+                </div>
+            @empty
+                <div class="dash-imports__empty">
+                    <span class="material-symbols-outlined">upload_file</span>
+                    No imports yet —
+                    <a href="{{ route('imports.index') }}">run one now</a>
+                </div>
+            @endforelse
+        </div>
+
     </section>
 @endsection

@@ -2,34 +2,34 @@
 
 @section('content')
     <section class="page-section">
-        <div class="hero">
-            <div>
-                <h1 class="hero__title">Import Cards</h1>
-                <p class="hero__subtitle">Upload an Anki-style TXT file, review parsed rows, then confirm to add them to your deck.</p>
-            </div>
-        </div>
 
-        {{-- Workflow stepper --}}
-        <div class="import-stepper">
-            <div class="import-stepper__step is-active" data-import-step="1">
-                <div class="import-stepper__bubble">
-                    <span class="material-symbols-outlined">upload_file</span>
-                </div>
-                <span class="import-stepper__label">Upload</span>
+        {{-- Compact page header: title left, stepper right --}}
+        <div class="import-page-header">
+            <div>
+                <h1 class="import-page-header__title">Import Cards</h1>
+                <p class="import-page-header__sub">Upload a TXT file, review parsed rows, then confirm to add them to your deck.</p>
             </div>
-            <div class="import-stepper__line"></div>
-            <div class="import-stepper__step" data-import-step="2">
-                <div class="import-stepper__bubble">
-                    <span class="material-symbols-outlined">manage_search</span>
+            <div class="import-stepper">
+                <div class="import-stepper__step is-active" data-import-step="1">
+                    <div class="import-stepper__bubble">
+                        <span class="material-symbols-outlined">upload_file</span>
+                    </div>
+                    <span class="import-stepper__label">Upload</span>
                 </div>
-                <span class="import-stepper__label">Preview</span>
-            </div>
-            <div class="import-stepper__line"></div>
-            <div class="import-stepper__step" data-import-step="3">
-                <div class="import-stepper__bubble">
-                    <span class="material-symbols-outlined">task_alt</span>
+                <div class="import-stepper__line"></div>
+                <div class="import-stepper__step" data-import-step="2">
+                    <div class="import-stepper__bubble">
+                        <span class="material-symbols-outlined">manage_search</span>
+                    </div>
+                    <span class="import-stepper__label">Preview</span>
                 </div>
-                <span class="import-stepper__label">Confirm</span>
+                <div class="import-stepper__line"></div>
+                <div class="import-stepper__step" data-import-step="3">
+                    <div class="import-stepper__bubble">
+                        <span class="material-symbols-outlined">task_alt</span>
+                    </div>
+                    <span class="import-stepper__label">Confirm</span>
+                </div>
             </div>
         </div>
 
@@ -47,25 +47,24 @@
                     </div>
                 </div>
 
+                {{-- 2-column form: deck select | file dropzone --}}
                 <div class="import-form">
-                    {{-- Deck select --}}
-                    <label class="import-field">
+                    <div class="import-field">
                         <span class="import-field__label">Target deck</span>
-                        <div class="import-select-wrap">
-                            <span class="import-select-wrap__icon material-symbols-outlined">layers</span>
-                            <select class="import-select" data-import-deck-select>
+                        <div class="deck-select-wrap" data-deck-select-wrap>
+                            {{-- Hidden native select — JS reads options + dispatches events here --}}
+                            <select class="import-select" data-import-deck-select style="display:none">
                                 @forelse ($importDecks as $deck)
                                     <option value="{{ $deck->id }}" @selected(($importSelectedDeckId ?? null) === $deck->id)>{{ $deck->name }}</option>
                                 @empty
                                     <option value="" disabled selected>No deck available</option>
                                 @endforelse
-                                <option value="NEW_DECK" style="font-weight: bold; color: var(--primary);">+ Create New Deck...</option>
+                                <option value="NEW_DECK">+ Create New Deck...</option>
                             </select>
-                            <span class="import-select-wrap__chevron material-symbols-outlined">expand_more</span>
+                            {{-- Custom dropdown built by JS --}}
                         </div>
-                    </label>
+                    </div>
 
-                    {{-- File drop zone --}}
                     <label class="import-field import-field--file">
                         <span class="import-field__label">TXT file</span>
                         <div class="import-dropzone" data-import-dropzone>
@@ -89,14 +88,26 @@
                 </div>
 
                 <div class="import-actions">
-                    <button class="primary-button" type="button" data-import-preview-button>
+                    <button class="import-action-btn import-action-btn--primary" type="button" data-import-preview-button>
                         <span class="material-symbols-outlined">preview</span>
                         <span>Preview Import</span>
                     </button>
-                    <button class="primary-button primary-button--success" type="button" data-import-confirm-button disabled>
+                    <button class="import-action-btn import-action-btn--success" type="button" data-import-confirm-button disabled>
                         <span class="material-symbols-outlined">task_alt</span>
                         <span>Confirm Import</span>
                     </button>
+                </div>
+
+                {{-- Progress indicator --}}
+                <div class="import-progress is-hidden" data-import-progress>
+                    <div class="import-progress__header">
+                        <span class="material-symbols-outlined import-progress__spinner">autorenew</span>
+                        <span class="import-progress__label" data-import-progress-label>Processing…</span>
+                        <span class="import-progress__pct" data-import-progress-pct>0%</span>
+                    </div>
+                    <div class="import-progress__track">
+                        <div class="import-progress__fill" data-import-progress-bar></div>
+                    </div>
                 </div>
 
                 <div class="import-feedback is-hidden" data-import-feedback></div>
@@ -104,11 +115,9 @@
 
             {{-- Card 2: Preview Summary --}}
             <section class="import-card">
-                <div class="section-header">
-                    <div>
-                        <h2 class="section-title">Preview Summary</h2>
-                        <p class="section-subtitle" data-import-file-meta>No file previewed yet.</p>
-                    </div>
+                <div class="import-card-section-head">
+                    <h2 class="import-card-section-head__title">Preview Summary</h2>
+                    <p class="import-card-section-head__sub" data-import-file-meta>No file previewed yet.</p>
                 </div>
                 <div class="import-summary-grid">
                     <div class="import-summary-box">
@@ -152,11 +161,9 @@
 
             {{-- Card 3: Row Preview --}}
             <section class="import-card">
-                <div class="section-header">
-                    <div>
-                        <h2 class="section-title">Row Preview</h2>
-                        <p class="section-subtitle">Rows grouped by status — invalid rows are skipped automatically on confirm.</p>
-                    </div>
+                <div class="import-card-section-head">
+                    <h2 class="import-card-section-head__title">Row Preview</h2>
+                    <p class="import-card-section-head__sub">Rows grouped by status — invalid rows are skipped automatically on confirm.</p>
                 </div>
 
                 <div class="import-tabs">
