@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Deck;
-use App\Models\User;
 use App\Repositories\CardRepository;
 use App\Services\DashboardStatsService;
 use Illuminate\Contracts\View\View;
@@ -139,11 +138,7 @@ class ScreenController extends Controller
 
     private function resolveStudyContext(Request $request): array
     {
-        $user = User::query()
-            ->where('email', 'dev.study@example.com')
-            ->orWhereHas('cards')
-            ->orderBy('id')
-            ->first();
+        $user = auth()->user();
 
         $deckId = $request->integer('deck_id');
         $decks = collect();

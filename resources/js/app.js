@@ -85,6 +85,10 @@ const setupCreateDeck = () => {
                     deckSelect.querySelector('option[value="NEW_DECK"]'),
                 );
                 deckSelect.value = String(deck.id);
+                // notify custom dropdown to rebuild
+                deckSelect.dispatchEvent(
+                    new Event("change", { bubbles: true }),
+                );
             } else {
                 window.location.reload();
             }
@@ -394,6 +398,165 @@ const setupDeckDetail = () => {
     });
 };
 
+/**
+ * Replaces a hidden native <select data-import-deck-select> with a fully
+ * styled custom dropdown. The native select is kept hidden for JS compatibility.
+ */
+const setupDeckSelect = (nativeSelect) => {
+    if (!nativeSelect) return;
+
+    const wrap = nativeSelect.closest("[data-deck-select-wrap]");
+    if (!wrap) return;
+
+    // ── Build trigger button ────────────────────────────────
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "deck-select-trigger";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const iconEl = document.createElement("span");
+    iconEl.className = "material-symbols-outlined deck-select-trigger__icon";
+    iconEl.textContent = "layers";
+
+    const labelEl = document.createElement("span");
+    labelEl.className = "deck-select-trigger__label";
+
+    const chevronEl = document.createElement("span");
+    chevronEl.className =
+        "material-symbols-outlined deck-select-trigger__chevron";
+    chevronEl.textContent = "expand_more";
+
+    trigger.append(iconEl, labelEl, chevronEl);
+
+    // ── Build panel ─────────────────────────────────────────
+    const panel = document.createElement("div");
+    panel.className = "deck-select-panel is-hidden";
+    panel.setAttribute("role", "listbox");
+
+    wrap.append(trigger, panel);
+
+    // ── Helpers ─────────────────────────────────────────────
+    const isOpen = () => !panel.classList.contains("is-hidden");
+
+    const openPanel = () => {
+        buildOptions();
+        panel.classList.remove("is-hidden");
+        trigger.classList.add("is-open");
+        trigger.setAttribute("aria-expanded", "true");
+    };
+
+    const closePanel = () => {
+        panel.classList.add("is-hidden");
+        trigger.classList.remove("is-open");
+        trigger.setAttribute("aria-expanded", "false");
+    };
+
+    const buildOptions = () => {
+        panel.innerHTML = "";
+        const opts = Array.from(nativeSelect.options);
+        const current = nativeSelect.value;
+
+        // Update trigger label
+        const selected = opts.find((o) => o.value === current && !o.disabled);
+        labelEl.textContent = selected ? selected.text : "Select a deck…";
+        labelEl.className = selected
+            ? "deck-select-trigger__label"
+            : "deck-select-trigger__label deck-select-trigger__label--empty";
+
+        opts.forEach((opt) => {
+            const el = document.createElement("div");
+
+            // "No deck available" placeholder
+            if (opt.disabled) {
+                el.className = "deck-select-option deck-select-option--empty";
+                el.setAttribute("role", "option");
+                el.setAttribute("aria-disabled", "true");
+                el.textContent = opt.text;
+                panel.append(el);
+                return;
+            }
+
+            // "+ Create New Deck" special row
+            if (opt.value === "NEW_DECK") {
+                el.className = "deck-select-option deck-select-option--new";
+                el.setAttribute("role", "option");
+                el.innerHTML =
+                    '<span class="material-symbols-outlined">add</span>' +
+                    "<span>Create New Deck…</span>";
+                el.addEventListener("click", () => {
+                    closePanel();
+                    // Temporarily set NEW_DECK so setupCreateDeck fires its logic
+                    nativeSelect.value = "NEW_DECK";
+                    nativeSelect.dispatchEvent(
+                        new Event("change", { bubbles: true }),
+                    );
+                });
+                panel.append(el);
+                return;
+            }
+
+            // Normal deck option
+            el.className =
+                "deck-select-option" +
+                (opt.value === current ? " is-selected" : "");
+            el.setAttribute("role", "option");
+            el.setAttribute("aria-selected", String(opt.value === current));
+            el.innerHTML =
+                '<span class="material-symbols-outlined deck-select-option__check">check</span>' +
+                `<span class="deck-select-option__text">${opt.text}</span>`;
+
+            el.addEventListener("click", () => {
+                nativeSelect.value = opt.value;
+                nativeSelect.dispatchEvent(
+                    new Event("change", { bubbles: true }),
+                );
+                closePanel();
+                // Rebuild trigger label immediately
+                labelEl.textContent = opt.text;
+                labelEl.className = "deck-select-trigger__label";
+            });
+
+            panel.append(el);
+        });
+    };
+
+    // ── Events ──────────────────────────────────────────────
+    trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        isOpen() ? closePanel() : openPanel();
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+        if (!wrap.contains(e.target)) closePanel();
+    });
+
+    // Keyboard: Escape closes
+    wrap.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closePanel();
+    });
+
+    // Rebuild when native select is updated externally (e.g., new deck created)
+    nativeSelect.addEventListener("change", () => {
+        if (!isOpen()) {
+            // Just refresh the trigger label
+            const opts = Array.from(nativeSelect.options);
+            const sel = opts.find(
+                (o) => o.value === nativeSelect.value && !o.disabled,
+            );
+            if (sel) {
+                labelEl.textContent = sel.text;
+                labelEl.className = "deck-select-trigger__label";
+            }
+        }
+    });
+
+    // Initial render of trigger label
+    buildOptions();
+    // Collapse panel (buildOptions opens it conceptually, but panel is still hidden)
+};
+
 const setupImport = () => {
     const app = document.querySelector("[data-import-app]");
     if (!app) return;
@@ -402,6 +565,10 @@ const setupImport = () => {
     const confirmButton = app.querySelector("[data-import-confirm-button]");
     const deckSelect = app.querySelector("[data-import-deck-select]");
     const fileInput = app.querySelector("[data-import-file-input]");
+
+    // Boot the custom deck dropdown
+    setupDeckSelect(deckSelect);
+
     const feedback = app.querySelector("[data-import-feedback]");
     const rowsBody = app.querySelector("[data-import-rows-body]");
     const fileMeta = app.querySelector("[data-import-file-meta]");
@@ -410,11 +577,16 @@ const setupImport = () => {
     const dropzoneReady = app.querySelector("[data-import-dropzone-ready]");
     const filenameEl = app.querySelector("[data-import-filename]");
     const clearBtn = app.querySelector("[data-import-dropzone-clear]");
+    const progressEl = app.querySelector("[data-import-progress]");
+    const progressLabel = app.querySelector("[data-import-progress-label]");
+    const progressPct = app.querySelector("[data-import-progress-pct]");
+    const progressBar = app.querySelector("[data-import-progress-bar]");
 
     let importJobId = null;
     let confirmed = false;
     let rows = [];
     let filter = "all";
+    let stepTimer = null;
 
     // ── Step indicator ───────────────────────────────────────
     const setStep = (step) => {
@@ -432,6 +604,56 @@ const setupImport = () => {
         feedback.classList.remove("is-hidden");
     };
 
+    // ── Progress helpers ─────────────────────────────────────
+    const setProgress = (label, pct) => {
+        if (progressLabel) progressLabel.textContent = label;
+        if (progressPct) progressPct.textContent = `${pct}%`;
+        if (progressBar) progressBar.style.width = `${pct}%`;
+    };
+
+    const showProgress = (label, pct = 0) => {
+        progressEl?.classList.remove("is-hidden");
+        feedback.classList.add("is-hidden");
+        setProgress(label, pct);
+    };
+
+    const hideProgress = () => {
+        progressEl?.classList.add("is-hidden");
+        if (progressBar) progressBar.style.width = "0%";
+    };
+
+    /**
+     * Cycles through an array of { label, pct } steps at the given interval,
+     * stopping at the last step until stopSteps() is called.
+     */
+    const startSteps = (steps, intervalMs = 700) => {
+        clearTimeout(stepTimer);
+        let i = 0;
+        const tick = () => {
+            if (i < steps.length) {
+                setProgress(steps[i].label, steps[i].pct);
+                i++;
+                if (i < steps.length) stepTimer = setTimeout(tick, intervalMs);
+            }
+        };
+        tick();
+    };
+
+    const stopSteps = () => clearTimeout(stepTimer);
+
+    /**
+     * Completes the progress bar to 100 %, shows briefly, then hides.
+     */
+    const completeProgress = (doneLabel = "Done!") =>
+        new Promise((resolve) => {
+            stopSteps();
+            setProgress(doneLabel, 100);
+            setTimeout(() => {
+                hideProgress();
+                resolve();
+            }, 500);
+        });
+
     // ── Dropzone ─────────────────────────────────────────────
     const updateDropzone = (file) => {
         if (!file) {
@@ -444,7 +666,6 @@ const setupImport = () => {
         }
     };
 
-    // Click on dropzone area → open file picker
     dropzone?.addEventListener("click", (e) => {
         if (e.target.closest("[data-import-dropzone-clear]")) return;
         fileInput?.click();
@@ -454,23 +675,20 @@ const setupImport = () => {
         updateDropzone(fileInput.files?.[0] ?? null);
     });
 
-    // Clear button resets the selection
     clearBtn?.addEventListener("click", (e) => {
         e.stopPropagation();
         if (fileInput) fileInput.value = "";
         updateDropzone(null);
     });
 
-    // Drag-and-drop
     dropzone?.addEventListener("dragover", (e) => {
         e.preventDefault();
         dropzone.classList.add("is-drag-over");
     });
 
     dropzone?.addEventListener("dragleave", (e) => {
-        if (!dropzone.contains(e.relatedTarget)) {
+        if (!dropzone.contains(e.relatedTarget))
             dropzone.classList.remove("is-drag-over");
-        }
     });
 
     dropzone?.addEventListener("drop", (e) => {
@@ -564,7 +782,16 @@ const setupImport = () => {
         previewButton.disabled = true;
         previewButton.innerHTML =
             '<span class="material-symbols-outlined import-btn-spin">autorenew</span><span>Previewing…</span>';
-        feedback.classList.add("is-hidden");
+
+        showProgress("Reading file…", 5);
+        startSteps(
+            [
+                { label: "Parsing rows…", pct: 30 },
+                { label: "Validating content…", pct: 60 },
+                { label: "Saving preview data…", pct: 82 },
+            ],
+            700,
+        );
 
         try {
             const formData = new FormData();
@@ -594,6 +821,8 @@ const setupImport = () => {
             ).textContent = String(payload.summary?.invalid || 0);
 
             confirmButton.disabled = false;
+
+            await completeProgress("Preview complete!");
             showFeedback(
                 "Preview ready — review the rows below, then click Confirm Import when satisfied.",
                 "success",
@@ -601,6 +830,8 @@ const setupImport = () => {
             setStep(2);
             renderRows();
         } catch (err) {
+            stopSteps();
+            hideProgress();
             showFeedback(
                 err.message || "Preview failed. Check your file and try again.",
                 "error",
@@ -619,7 +850,16 @@ const setupImport = () => {
         confirmButton.disabled = true;
         confirmButton.innerHTML =
             '<span class="material-symbols-outlined import-btn-spin">autorenew</span><span>Importing…</span>';
-        feedback.classList.add("is-hidden");
+
+        showProgress("Checking for duplicates…", 8);
+        startSteps(
+            [
+                { label: "Creating notes…", pct: 28 },
+                { label: "Creating flashcards…", pct: 54 },
+                { label: "Finalising import…", pct: 80 },
+            ],
+            1100,
+        );
 
         try {
             const payload = await fetchJson(
@@ -633,25 +873,29 @@ const setupImport = () => {
                 },
             );
             confirmed = true;
+
+            const imported = payload.summary?.imported || 0;
+            const skipped = payload.summary?.skipped || 0;
+            const invalid = payload.summary?.invalid || 0;
+
+            await completeProgress(`${imported} cards imported!`);
             showFeedback(
-                `Import complete — ${payload.summary?.imported || 0} imported, ${payload.summary?.skipped || 0} skipped, ${payload.summary?.invalid || 0} invalid.`,
+                `Import complete — ${imported} imported, ${skipped} skipped, ${invalid} invalid.`,
                 "success",
             );
             setStep(3);
+            confirmButton.innerHTML =
+                '<span class="material-symbols-outlined">check</span><span>Imported</span>';
         } catch (err) {
+            stopSteps();
+            hideProgress();
             showFeedback(
                 err.message || "Import failed. Please try again.",
                 "error",
             );
             confirmButton.disabled = false;
-        } finally {
-            if (!confirmed) {
-                confirmButton.innerHTML =
-                    '<span class="material-symbols-outlined">task_alt</span><span>Confirm Import</span>';
-            } else {
-                confirmButton.innerHTML =
-                    '<span class="material-symbols-outlined">check</span><span>Imported</span>';
-            }
+            confirmButton.innerHTML =
+                '<span class="material-symbols-outlined">task_alt</span><span>Confirm Import</span>';
         }
     });
 };
@@ -895,6 +1139,19 @@ const setupStudy = async () => {
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
+    // Password visibility toggles (auth + profile pages)
+    document.querySelectorAll("[data-pw-toggle]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const input = document.getElementById(btn.dataset.pwToggle);
+            if (!input) return;
+            const isHidden = input.type === "password";
+            input.type = isHidden ? "text" : "password";
+            const icon = btn.querySelector(".material-symbols-outlined");
+            if (icon)
+                icon.textContent = isHidden ? "visibility_off" : "visibility";
+        });
+    });
+
     setupCreateDeck();
     setupDashboard();
     setupDeckDetail();
