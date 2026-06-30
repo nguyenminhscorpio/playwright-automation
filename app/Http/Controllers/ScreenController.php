@@ -68,6 +68,27 @@ class ScreenController extends Controller
         ];
         $cards = $cardRepository->paginateForUser($user, $filters, 20);
 
+        // Deck stats for the header
+        $now = now();
+        $deckStats = [
+            'total' => $deckModel->cards()->count(),
+            'new' => $deckModel->cards()->where('state', 'new')->count(),
+            'learning' => $deckModel->cards()->whereIn('state', ['learning', 'relearning'])->count(),
+            'review' => $deckModel->cards()->where('state', 'review')->count(),
+            'due' => $deckModel->cards()->where(function ($q) use ($now) {
+                $q->where(function ($lrQ) use ($now) {
+                    $lrQ->whereIn('state', ['learning', 'relearning'])
+                        ->where(function ($dueQ) use ($now) {
+                            $dueQ->whereNull('due_at')->orWhere('due_at', '<=', $now);
+                        });
+                })->orWhere(function ($revQ) use ($now) {
+                    $revQ->where('state', 'review')
+                        ->whereNotNull('due_at')
+                        ->where('due_at', '<=', $now);
+                });
+            })->count(),
+        ];
+
         return view('screens.deck-detail', [
             'title' => 'FlashMind - ' . $deckModel->name,
             'page' => 'deck-detail',
@@ -76,6 +97,7 @@ class ScreenController extends Controller
             'allDecks' => $allDecks,
             'cards' => $cards,
             'filters' => $filters,
+            'deckStats' => $deckStats,
         ]);
     }
 
