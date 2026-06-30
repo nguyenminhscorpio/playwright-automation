@@ -76,7 +76,7 @@ class TxtImportService
 
     public function confirm(User $user, ImportJob $importJob): array
     {
-        if ($importJob->user_id !== $user->id) {
+        if ((int) $importJob->user_id !== (int) $user->id) {
             throw new InvalidArgumentException('Import job does not belong to the given user.');
         }
 
@@ -271,7 +271,7 @@ class TxtImportService
 
     public function showJob(User $user, ImportJob $importJob): array
     {
-        if ($importJob->user_id !== $user->id) {
+        if ((int) $importJob->user_id !== (int) $user->id) {
             throw new InvalidArgumentException('Import job does not belong to the given user.');
         }
 
@@ -295,7 +295,7 @@ class TxtImportService
 
     public function listRows(User $user, ImportJob $importJob): array
     {
-        if ($importJob->user_id !== $user->id) {
+        if ((int) $importJob->user_id !== (int) $user->id) {
             throw new InvalidArgumentException('Import job does not belong to the given user.');
         }
 
@@ -398,7 +398,7 @@ class TxtImportService
 
     private function assertDeckOwnership(User $user, Deck $deck): void
     {
-        if ($deck->user_id !== $user->id) {
+        if ((int) $deck->user_id !== (int) $user->id) {
             throw new InvalidArgumentException('Deck does not belong to the given user.');
         }
     }
