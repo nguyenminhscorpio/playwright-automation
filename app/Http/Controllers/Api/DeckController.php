@@ -112,6 +112,12 @@ class DeckController extends Controller
             return User::query()->findOrFail($userId);
         }
 
+        // Fall back to authenticated user (web session)
+        $authUser = $request->user();
+        if ($authUser !== null) {
+            return $authUser;
+        }
+
         return User::query()->firstOrCreate(
             ['email' => 'dev.study@example.com'],
             ['name' => 'Dev Study User', 'password' => Hash::make('password')]

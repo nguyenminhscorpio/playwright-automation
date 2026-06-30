@@ -54,6 +54,7 @@
     </head>
     <body
         class="app-body"
+        data-auth-user-id="{{ $authUser?->id ?? '' }}"
         data-page="{{ $page ?? 'default' }}"
         data-study-screen="{{ $studyScreen ?? '' }}"
         data-study-mode="{{ $studyMode }}"
