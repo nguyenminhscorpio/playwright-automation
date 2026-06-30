@@ -57,6 +57,14 @@ class DeckController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = $this->resolveUser($request);
+
+        \Log::info('[DeckController::store] resolved user', [
+            'user_id' => $user->id,
+            'user_email' => $user->email,
+            'from_request' => $request->has('user_id'),
+            'from_session' => $request->user()?->id,
+        ]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
