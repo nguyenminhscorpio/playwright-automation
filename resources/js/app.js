@@ -66,9 +66,11 @@ const setupCreateDeck = () => {
 
         try {
             submitButton.disabled = true;
+            const userId = document.body.dataset.authUserId || "";
             const deck = await fetchJson(document.body.dataset.decksApiUrl, {
                 method: "POST",
                 body: JSON.stringify({
+                    user_id: userId ? Number(userId) : undefined,
                     name: nameInput.value.trim(),
                     description: descriptionInput?.value?.trim() || "",
                 }),
