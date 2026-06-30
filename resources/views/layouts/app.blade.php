@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ $title ?? 'FlashMind' }}</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,9 +12,12 @@
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400" rel="stylesheet">
 
         @php
-            $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
+            $manifestPath = public_path('build/manifest.json');
+            $manifest = file_exists($manifestPath)
+                ? json_decode(file_get_contents($manifestPath), true)
+                : [];
             $cssFile = $manifest['resources/css/app.css']['file'] ?? '';
-            $jsFile = $manifest['resources/js/app.js']['file'] ?? '';
+            $jsFile  = $manifest['resources/js/app.js']['file'] ?? '';
         @endphp
         @if($cssFile)
             <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}" />
@@ -21,25 +25,33 @@
         @if($jsFile)
             <script type="module" src="{{ asset('build/' . $jsFile) }}"></script>
         @endif
+
+        @php
+            $authUser     = auth()->user();
+            $authName     = $authUser?->name ?? 'Learner';
+            $authInitials = collect(explode(' ', trim($authName)))
+                ->map(fn($w) => strtoupper(substr($w, 0, 1)))
+                ->take(2)->implode('');
+            $isStudyPage = request()->routeIs('study.*');
+            $studyMode = request('mode', 'flip');
+            $studyRouteVersion = 'study-v2';
+            $studyDeckQuery = array_filter([
+                'deck_id' => request('deck_id'),
+                'sv' => $studyRouteVersion,
+            ], fn ($value) => $value !== null && $value !== '');
+            $currentStudyScreen = $studyScreen ?? 'front';
+            $flipModeUrl = match ($currentStudyScreen) {
+                'typing' => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
+                'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'flip']),
+                default => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
+            };
+            $typingModeUrl = match ($currentStudyScreen) {
+                'typing' => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
+                'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'typing']),
+                default => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
+            };
+        @endphp
     </head>
-    @php($isStudyPage = request()->routeIs('study.*'))
-    @php($studyMode = request('mode', 'flip'))
-    @php($studyRouteVersion = 'study-v2')
-    @php($studyDeckQuery = array_filter([
-        'deck_id' => request('deck_id'),
-        'sv' => $studyRouteVersion,
-    ], fn ($value) => $value !== null && $value !== ''))
-    @php($currentStudyScreen = $studyScreen ?? 'front')
-    @php($flipModeUrl = match ($currentStudyScreen) {
-        'typing' => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
-        'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'flip']),
-        default => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
-    })
-    @php($typingModeUrl = match ($currentStudyScreen) {
-        'typing' => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
-        'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'typing']),
-        default => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
-    })
     <body
         class="app-body"
         data-page="{{ $page ?? 'default' }}"
@@ -79,7 +91,7 @@
                         <div class="nav__icon"><span class="material-symbols-outlined">dashboard</span></div>
                         <span>Dashboard</span>
                     </a>
-                    @php($navDeckId = request()->route('deck') ?? optional(\App\Models\Deck::first())->id ?? 1)
+                    @php($navDeckId = request()->route('deck') ?? ($authUser?->decks()->value('id') ?? 1))
                     <a href="{{ request()->routeIs('decks.*') ? url()->current() : route('decks.show', $navDeckId) }}" class="nav__link {{ request()->routeIs('decks.*') ? 'is-active' : '' }}">
                         <div class="nav__icon"><span class="material-symbols-outlined">layers</span></div>
                         <span>My Decks</span>
@@ -96,13 +108,6 @@
 
                 <div class="sidebar__footer">
                     <a href="{{ route('profile') }}" class="sidebar__user">
-                        @php
-                            $authUser   = auth()->user();
-                            $authName   = $authUser?->name ?? 'Learner';
-                            $authInitials = collect(explode(' ', trim($authName)))
-                                ->map(fn($w) => strtoupper(substr($w, 0, 1)))
-                                ->take(2)->implode('');
-                        @endphp
                         <div class="sidebar__user-avatar">{{ $authInitials }}</div>
                         <div class="sidebar__user-info">
                             <div class="sidebar__user-name">{{ $authName }}</div>
