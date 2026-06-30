@@ -31,6 +31,8 @@ class ImportJob extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'deck_id' => 'integer',
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
         ];
