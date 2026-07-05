@@ -12,6 +12,7 @@
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400" rel="stylesheet">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @stack('styles')
 
         @php
             $authUser     = auth()->user();
