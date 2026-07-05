@@ -33,6 +33,16 @@
                     </select>
                 </div>
                 <p class="dd-hero__desc">{{ $deck->description ?: 'Manage your flashcards, track progress, and import new content.' }}</p>
+                <div class="dd-hero__meta" aria-label="Deck summary">
+                    <span class="dd-meta-pill">
+                        <span class="material-symbols-outlined">style</span>
+                        {{ $deckStats['total'] }} cards
+                    </span>
+                    <span class="dd-meta-pill dd-meta-pill--due">
+                        <span class="material-symbols-outlined">notifications_active</span>
+                        {{ $deckStats['due'] }} due now
+                    </span>
+                </div>
             </div>
         </div>
         <div class="dd-hero__actions">
@@ -53,7 +63,7 @@
 
     {{-- ── Stats Cards ────────────────────────────────────── --}}
     <section class="dd-stats" aria-label="Deck statistics">
-        <div class="dd-stat-card">
+        <div class="dd-stat-card dd-stat-card--total">
             <div class="dd-stat-card__icon dd-stat-card__icon--total">
                 <span class="material-symbols-outlined">style</span>
             </div>
@@ -62,7 +72,7 @@
                 <span class="dd-stat-card__label">Total Cards</span>
             </div>
         </div>
-        <div class="dd-stat-card">
+        <div class="dd-stat-card dd-stat-card--new">
             <div class="dd-stat-card__icon dd-stat-card__icon--new">
                 <span class="material-symbols-outlined">fiber_new</span>
             </div>
@@ -71,7 +81,7 @@
                 <span class="dd-stat-card__label">New</span>
             </div>
         </div>
-        <div class="dd-stat-card">
+        <div class="dd-stat-card dd-stat-card--learning">
             <div class="dd-stat-card__icon dd-stat-card__icon--learning">
                 <span class="material-symbols-outlined">neurology</span>
             </div>
@@ -80,7 +90,7 @@
                 <span class="dd-stat-card__label">Learning</span>
             </div>
         </div>
-        <div class="dd-stat-card">
+        <div class="dd-stat-card dd-stat-card--review">
             <div class="dd-stat-card__icon dd-stat-card__icon--review">
                 <span class="material-symbols-outlined">verified</span>
             </div>
@@ -89,7 +99,7 @@
                 <span class="dd-stat-card__label">Review</span>
             </div>
         </div>
-        <div class="dd-stat-card">
+        <div class="dd-stat-card dd-stat-card--due">
             <div class="dd-stat-card__icon dd-stat-card__icon--due">
                 <span class="material-symbols-outlined">notifications_active</span>
             </div>
@@ -102,26 +112,28 @@
 
     {{-- ── Toolbar ────────────────────────────────────────── --}}
     <form method="GET" action="{{ route('decks.show', $deck) }}" class="dd-toolbar">
-        <div class="dd-toolbar__search">
-            <span class="material-symbols-outlined">search</span>
-            <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Search front or back text..." />
-            @if(!empty($filters['q']))
-                <a href="{{ route('decks.show', $deck) }}" class="dd-toolbar__clear" aria-label="Clear search">
-                    <span class="material-symbols-outlined">close</span>
-                </a>
-            @endif
-        </div>
-        <div class="dd-toolbar__filters">
-            <select class="dd-toolbar__select" name="status">
-                <option value="all" @selected(($filters['status'] ?? 'all') === 'all')>All Status</option>
-                <option value="new" @selected(($filters['status'] ?? '') === 'new')>New</option>
-                <option value="learning" @selected(($filters['status'] ?? '') === 'learning')>Learning</option>
-                <option value="review" @selected(($filters['status'] ?? '') === 'review')>Review</option>
-            </select>
-            <button class="dd-btn dd-btn--filter" type="submit">
-                <span class="material-symbols-outlined">filter_list</span>
-                <span>Filter</span>
-            </button>
+        <div class="dd-toolbar__main">
+            <div class="dd-toolbar__search">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Search front or back text..." />
+                @if(!empty($filters['q']))
+                    <a href="{{ route('decks.show', $deck) }}" class="dd-toolbar__clear" aria-label="Clear search">
+                        <span class="material-symbols-outlined">close</span>
+                    </a>
+                @endif
+            </div>
+            <div class="dd-toolbar__filters">
+                <select class="dd-toolbar__select" name="status" aria-label="Filter by status">
+                    <option value="all" @selected(($filters['status'] ?? 'all') === 'all')>All Status</option>
+                    <option value="new" @selected(($filters['status'] ?? '') === 'new')>New</option>
+                    <option value="learning" @selected(($filters['status'] ?? '') === 'learning')>Learning</option>
+                    <option value="review" @selected(($filters['status'] ?? '') === 'review')>Review</option>
+                </select>
+                <button class="dd-btn dd-btn--filter" type="submit">
+                    <span class="material-symbols-outlined">filter_list</span>
+                    <span>Filter</span>
+                </button>
+            </div>
         </div>
         <button class="dd-btn dd-btn--danger is-hidden" type="button" data-action-bulk-delete>
             <span class="material-symbols-outlined">delete_sweep</span>
@@ -131,6 +143,16 @@
 
     {{-- ── Card Table ─────────────────────────────────────── --}}
     <section class="dd-table-wrap">
+        <div class="dd-table-head">
+            <div>
+                <h2 class="dd-table-head__title">Cards</h2>
+                <p class="dd-table-head__meta">{{ $cards->total() }} total cards in this deck</p>
+            </div>
+            <span class="dd-table-head__status">
+                <span class="material-symbols-outlined">fact_check</span>
+                {{ $cards->count() }} visible
+            </span>
+        </div>
         <table class="dd-table">
             <thead>
                 <tr>
