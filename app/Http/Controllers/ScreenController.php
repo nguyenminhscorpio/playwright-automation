@@ -57,20 +57,22 @@ class ScreenController extends Controller
     {
         [$user] = $this->resolveStudyContext($request);
 
-        $deckModel = Deck::query()->where('user_id', $user?->id)->findOrFail($deck);
+        $deckModel = Deck::query()->where('user_id', $user?->id)->find($deck);
         $allDecks = Deck::query()
             ->where('user_id', $user?->id)
             ->orderBy('name')
             ->get(['id', 'name']);
+        
         $filters = [
-            'deck_id' => $deckModel->id,
+            'deck_id' => $deckModel?->id,
             'q' => $request->string('q')->toString(),
             'status' => $request->string('status')->toString(),
         ];
-        $cards = $cardRepository->paginateForUser($user, $filters, 20);
+        
+        $cards = $deckModel ? $cardRepository->paginateForUser($user, $filters, 20) : null;
 
         return view('screens.deck-detail', [
-            'title' => 'FlashMind - ' . $deckModel->name,
+            'title' => 'FlashMind - ' . ($deckModel?->name ?? 'Deck Not Found'),
             'page' => 'deck-detail',
             'deckDetailUserId' => $user?->id,
             'deck' => $deckModel,

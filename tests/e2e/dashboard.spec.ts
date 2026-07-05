@@ -87,7 +87,7 @@ test.describe('Dashboard', () => {
       await page.reload();
       const card = dashboardPage.deckCardByName(deck.name);
 
-      await card.getByRole('link', { name: 'Open Deck' }).click();
+      await card.getByRole('link', { name: 'View Deck' }).click();
       await page.waitForURL(new RegExp(`/decks/${deck.id}$`));
 
       await expect(page.getByRole('heading', { level: 1, name: /Card Management/ })).toBeVisible();
@@ -111,7 +111,7 @@ test.describe('Dashboard', () => {
       await page.reload();
       const card = dashboardPage.deckCardByName(deck.name);
 
-      await card.getByRole('link', { name: /Review \d+ Cards/ }).click();
+      await card.getByRole('link', { name: /Review \(\d+\)/ }).click();
       await page.waitForURL(new RegExp(`/study/front\\?deck_id=${deck.id}`));
       await expect(page.getByRole('heading', { level: 1, name: 'Session Progress' })).toBeVisible();
     } finally {
