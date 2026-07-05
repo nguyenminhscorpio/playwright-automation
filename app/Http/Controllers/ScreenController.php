@@ -56,11 +56,23 @@ class ScreenController extends Controller
     {
         [$user] = $this->resolveStudyContext($request);
 
-        $deckModel = Deck::query()->where('user_id', $user?->id)->findOrFail($deck);
         $allDecks = Deck::query()
             ->where('user_id', $user?->id)
             ->orderBy('name')
             ->get(['id', 'name']);
+
+        $deckModel = $allDecks->firstWhere('id', (int) $deck);
+
+        if ($deckModel === null) {
+            return view('screens.deck-detail', [
+                'title' => 'FlashMind - No Deck Found',
+                'page' => 'deck-detail',
+                'deckDetailUserId' => $user?->id,
+                'deck' => null,
+                'allDecks' => $allDecks,
+            ]);
+        }
+
         $filters = [
             'deck_id' => $deckModel->id,
             'q' => $request->string('q')->toString(),

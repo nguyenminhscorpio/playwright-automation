@@ -3950,6 +3950,15 @@ a.sidebar__user {
     text-align: center;
 }
 
+.dd-empty--page {
+    min-height: 28rem;
+    justify-content: center;
+    border: 1px solid var(--surface-stroke);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: var(--shadow-card);
+}
+
 .dd-empty__icon {
     width: 4rem;
     height: 4rem;
@@ -3971,6 +3980,10 @@ a.sidebar__user {
     font-weight: 700;
     color: var(--text);
     margin: 0 0 0.4rem;
+}
+
+.dd-empty--page .dd-empty__title {
+    font-size: 1.45rem;
 }
 
 .dd-empty__desc {
