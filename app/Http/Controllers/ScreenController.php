@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Deck;
-use App\Models\User;
 use App\Repositories\CardRepository;
 use App\Services\DashboardStatsService;
 use Illuminate\Contracts\View\View;
@@ -71,6 +70,27 @@ class ScreenController extends Controller
         
         $cards = $deckModel ? $cardRepository->paginateForUser($user, $filters, 20) : null;
 
+        // Deck stats for the header
+        $now = now();
+        $deckStats = [
+            'total' => $deckModel->cards()->count(),
+            'new' => $deckModel->cards()->where('state', 'new')->count(),
+            'learning' => $deckModel->cards()->whereIn('state', ['learning', 'relearning'])->count(),
+            'review' => $deckModel->cards()->where('state', 'review')->count(),
+            'due' => $deckModel->cards()->where(function ($q) use ($now) {
+                $q->where(function ($lrQ) use ($now) {
+                    $lrQ->whereIn('state', ['learning', 'relearning'])
+                        ->where(function ($dueQ) use ($now) {
+                            $dueQ->whereNull('due_at')->orWhere('due_at', '<=', $now);
+                        });
+                })->orWhere(function ($revQ) use ($now) {
+                    $revQ->where('state', 'review')
+                        ->whereNotNull('due_at')
+                        ->where('due_at', '<=', $now);
+                });
+            })->count(),
+        ];
+
         return view('screens.deck-detail', [
             'title' => 'FlashMind - ' . ($deckModel?->name ?? 'Deck Not Found'),
             'page' => 'deck-detail',
@@ -79,6 +99,7 @@ class ScreenController extends Controller
             'allDecks' => $allDecks,
             'cards' => $cards,
             'filters' => $filters,
+            'deckStats' => $deckStats,
         ]);
     }
 
@@ -141,11 +162,7 @@ class ScreenController extends Controller
 
     private function resolveStudyContext(Request $request): array
     {
-        $user = User::query()
-            ->where('email', 'dev.study@example.com')
-            ->orWhereHas('cards')
-            ->orderBy('id')
-            ->first();
+        $user = auth()->user();
 
         $deckId = $request->integer('deck_id');
         $decks = collect();

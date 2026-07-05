@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ $title ?? 'FlashMind' }}</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,9 +12,12 @@
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400" rel="stylesheet">
 
         @php
-            $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
+            $manifestPath = public_path('build/manifest.json');
+            $manifest = file_exists($manifestPath)
+                ? json_decode(file_get_contents($manifestPath), true)
+                : [];
             $cssFile = $manifest['resources/css/app.css']['file'] ?? '';
-            $jsFile = $manifest['resources/js/app.js']['file'] ?? '';
+            $jsFile  = $manifest['resources/js/app.js']['file'] ?? '';
         @endphp
         @if($cssFile)
             <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}" />
@@ -21,27 +25,36 @@
         @if($jsFile)
             <script type="module" src="{{ asset('build/' . $jsFile) }}"></script>
         @endif
+
+        @php
+            $authUser     = auth()->user();
+            $authName     = $authUser?->name ?? 'Learner';
+            $authInitials = collect(explode(' ', trim($authName)))
+                ->map(fn($w) => strtoupper(substr($w, 0, 1)))
+                ->take(2)->implode('');
+            $isStudyPage = request()->routeIs('study.*');
+            $studyMode = request('mode', 'flip');
+            $studyRouteVersion = 'study-v2';
+            $studyDeckQuery = array_filter([
+                'deck_id' => request('deck_id'),
+                'sv' => $studyRouteVersion,
+            ], fn ($value) => $value !== null && $value !== '');
+            $currentStudyScreen = $studyScreen ?? 'front';
+            $flipModeUrl = match ($currentStudyScreen) {
+                'typing' => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
+                'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'flip']),
+                default => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
+            };
+            $typingModeUrl = match ($currentStudyScreen) {
+                'typing' => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
+                'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'typing']),
+                default => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
+            };
+        @endphp
     </head>
-    @php($isStudyPage = request()->routeIs('study.*'))
-    @php($studyMode = request('mode', 'flip'))
-    @php($studyRouteVersion = 'study-v2')
-    @php($studyDeckQuery = array_filter([
-        'deck_id' => request('deck_id'),
-        'sv' => $studyRouteVersion,
-    ], fn ($value) => $value !== null && $value !== ''))
-    @php($currentStudyScreen = $studyScreen ?? 'front')
-    @php($flipModeUrl = match ($currentStudyScreen) {
-        'typing' => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
-        'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'flip']),
-        default => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
-    })
-    @php($typingModeUrl = match ($currentStudyScreen) {
-        'typing' => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
-        'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'typing']),
-        default => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
-    })
     <body
         class="app-body"
+        data-auth-user-id="{{ $authUser?->id ?? '' }}"
         data-page="{{ $page ?? 'default' }}"
         data-study-screen="{{ $studyScreen ?? '' }}"
         data-study-mode="{{ $studyMode }}"
@@ -63,33 +76,49 @@
     >
         <div class="app-shell">
             <aside class="sidebar">
-                <div class="brand">
-                    <div class="brand__avatar">F</div>
+                <div class="sidebar__brand">
+                    <div class="sidebar__logo">
+                        <span class="material-symbols-outlined">auto_stories</span>
+                    </div>
                     <div>
-                        <div class="brand__name">FlashMind</div>
-                        <div class="brand__tagline">Master Your Learning</div>
+                        <div class="sidebar__name">FlashMind</div>
+                        <div class="sidebar__tagline">Master Your Learning</div>
                     </div>
                 </div>
 
                 <nav class="nav">
+                    <span class="nav__label">Menu</span>
                     <a href="{{ route('dashboard') }}" class="nav__link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}">
-                        <span class="material-symbols-outlined">dashboard</span>
+                        <div class="nav__icon"><span class="material-symbols-outlined">dashboard</span></div>
                         <span>Dashboard</span>
                     </a>
-                    @php($navDeckId = request()->route('deck') ?? optional(\App\Models\Deck::first())->id ?? 1)
+                    @php($navDeckId = request()->route('deck') ?? ($authUser?->decks()->value('id') ?? 1))
                     <a href="{{ request()->routeIs('decks.*') ? url()->current() : route('decks.show', $navDeckId) }}" class="nav__link {{ request()->routeIs('decks.*') ? 'is-active' : '' }}">
-                        <span class="material-symbols-outlined">layers</span>
+                        <div class="nav__icon"><span class="material-symbols-outlined">layers</span></div>
                         <span>My Decks</span>
                     </a>
                     <a href="{{ route('study.front', ['sv' => $studyRouteVersion]) }}" class="nav__link {{ request()->routeIs('study.*') ? 'is-active' : '' }}">
-                        <span class="material-symbols-outlined">school</span>
+                        <div class="nav__icon"><span class="material-symbols-outlined">school</span></div>
                         <span>Study Session</span>
                     </a>
                     <a href="{{ route('imports.index') }}" class="nav__link {{ request()->routeIs('imports.*') ? 'is-active' : '' }}">
-                        <span class="material-symbols-outlined">upload_file</span>
+                        <div class="nav__icon"><span class="material-symbols-outlined">upload_file</span></div>
                         <span>Import</span>
                     </a>
                 </nav>
+
+                <div class="sidebar__footer">
+                    <a href="{{ route('profile') }}" class="sidebar__user">
+                        <div class="sidebar__user-avatar">{{ $authInitials }}</div>
+                        <div class="sidebar__user-info">
+                            <div class="sidebar__user-name">{{ $authName }}</div>
+                            <div class="sidebar__user-status">
+                                <span class="sidebar__user-dot"></span>Active
+                            </div>
+                        </div>
+                        <span class="material-symbols-outlined sidebar__user-arrow">chevron_right</span>
+                    </a>
+                </div>
             </aside>
 
             <div class="main-shell">
@@ -98,6 +127,21 @@
                         <span class="material-symbols-outlined">search</span>
                         <input type="text" placeholder="Search decks..." />
                     </label>
+
+                    <div class="topbar__center">
+                        <div class="topbar__page-label">
+                            @php($pageLabels = ['dashboard' => 'Dashboard', 'deck-detail' => 'My Decks', 'imports' => 'Import'])
+                            <span class="material-symbols-outlined topbar__page-icon">
+                                @switch($page ?? 'default')
+                                    @case('dashboard') dashboard @break
+                                    @case('deck-detail') layers @break
+                                    @case('imports') upload_file @break
+                                    @default school @break
+                                @endswitch
+                            </span>
+                            <span>{{ $pageLabels[$page ?? ''] ?? 'FlashMind' }}</span>
+                        </div>
+                    </div>
 
                     <div class="topbar__actions">
                         @if ($isStudyPage)
@@ -112,7 +156,9 @@
                                 </a>
                             </div>
                         @endif
-                        <div class="user-chip"><span>AL</span></div>
+                        <a href="{{ route('profile') }}" class="user-chip" title="{{ auth()->user()?->name ?? 'Profile' }}">
+                            <span>{{ $authInitials ?? 'ME' }}</span>
+                        </a>
                     </div>
                 </header>
 
@@ -125,24 +171,33 @@
         <dialog id="create-deck-modal" class="custom-modal">
             <form method="dialog" class="custom-modal__form">
                 <div class="custom-modal__header">
-                    <h2>Create New Deck</h2>
-                    <button type="button" class="icon-button" onclick="document.getElementById('create-deck-modal').close()">
+                    <div class="custom-modal__header-icon">
+                        <span class="material-symbols-outlined">layers</span>
+                    </div>
+                    <div class="custom-modal__header-text">
+                        <h2>Create New Deck</h2>
+                        <p>Organise your flashcards into a new deck.</p>
+                    </div>
+                    <button type="button" class="custom-modal__close" onclick="document.getElementById('create-deck-modal').close()">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
                 <div class="custom-modal__body">
-                    <label class="modal-field">
-                        <span class="modal-field__label">Deck Name</span>
-                        <input type="text" id="new-deck-name" class="modal-input" placeholder="e.g. English Vocabulary" required autocomplete="off" />
+                    <label class="import-field">
+                        <span class="import-field__label">Deck Name</span>
+                        <input type="text" id="new-deck-name" class="import-file-input" placeholder="e.g. English Vocabulary" required autocomplete="off" />
                     </label>
-                    <label class="modal-field">
-                        <span class="modal-field__label">Description</span>
-                        <textarea id="new-deck-description" class="modal-input" rows="4" placeholder="Short description for this deck"></textarea>
+                    <label class="import-field">
+                        <span class="import-field__label">Description</span>
+                        <textarea id="new-deck-description" class="import-file-input" rows="4" placeholder="Short description for this deck"></textarea>
                     </label>
                 </div>
                 <div class="custom-modal__footer">
-                    <button type="button" class="secondary-button" onclick="document.getElementById('create-deck-modal').close()">Cancel</button>
-                    <button type="submit" class="primary-button" id="create-deck-submit-btn">Create Deck</button>
+                    <button type="button" class="modal-btn modal-btn--cancel" onclick="document.getElementById('create-deck-modal').close()">Cancel</button>
+                    <button type="submit" class="modal-btn modal-btn--submit" id="create-deck-submit-btn">
+                        <span class="material-symbols-outlined">add</span>
+                        Create Deck
+                    </button>
                 </div>
             </form>
         </dialog>
