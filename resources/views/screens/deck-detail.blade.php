@@ -1,5 +1,9 @@
 @extends('layouts.app', ['page' => 'deck-detail'])
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/deck-detail.css') }}?v=20260705">
+@endpush
+
 @section('content')
 <div class="dd" data-deck-detail-app data-deck-id="{{ $deck->id }}" data-user-id="{{ $deckDetailUserId ?? '' }}" data-total-cards="{{ $cards->total() }}">
 
