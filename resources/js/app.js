@@ -213,6 +213,7 @@ const setupDeckDetail = () => {
             title.textContent = "Create Card";
             feedback.classList.add("is-hidden");
             modal.showModal();
+            requestAnimationFrame(() => frontInput?.focus());
         },
     );
 
@@ -225,6 +226,7 @@ const setupDeckDetail = () => {
             title.textContent = "Edit Card";
             feedback.classList.add("is-hidden");
             modal.showModal();
+            requestAnimationFrame(() => frontInput?.focus());
         });
     });
 
@@ -280,6 +282,7 @@ const setupDeckDetail = () => {
         app.querySelectorAll("[data-row-checkbox]"),
     );
     const bulkDeleteBtn = app.querySelector("[data-action-bulk-delete]");
+    const bulkSelectedCount = app.querySelector("[data-bulk-selected-count]");
 
     const updateBulkActions = () => {
         if (!bulkDeleteBtn || rowCheckboxes.length === 0) return;
@@ -289,6 +292,9 @@ const setupDeckDetail = () => {
             : checkedCount;
 
         bulkDeleteBtn.classList.toggle("is-hidden", actualSelectedCount === 0);
+        if (bulkSelectedCount) {
+            bulkSelectedCount.textContent = String(actualSelectedCount);
+        }
 
         if (selectAllCheckbox) {
             if (isAllSelected) {
@@ -590,6 +596,8 @@ const setupImport = () => {
     const swapButton = app.querySelector("[data-import-swap-button]");
     const frontHeading = app.querySelector("[data-import-front-heading]");
     const backHeading = app.querySelector("[data-import-back-heading]");
+    const filterButtons = app.querySelectorAll("[data-import-filter]");
+    const tabCounts = app.querySelectorAll("[data-import-tab-count]");
 
     let importJobId = null;
     let confirmed = false;
@@ -757,8 +765,35 @@ const setupImport = () => {
         }
     };
 
+    const updateTabCounts = () => {
+        const counts = rows.reduce(
+            (acc, row) => {
+                acc.all += 1;
+                acc[rowKind(row)] += 1;
+                return acc;
+            },
+            { all: 0, valid: 0, warning: 0, invalid: 0 },
+        );
+
+        tabCounts.forEach((countEl) => {
+            const key = countEl.dataset.importTabCount;
+            countEl.textContent = String(counts[key] ?? 0);
+        });
+    };
+
+    const setActiveFilter = (nextFilter) => {
+        filter = nextFilter || "all";
+        filterButtons.forEach((btn) =>
+            btn.classList.toggle(
+                "is-mode-active",
+                (btn.dataset.importFilter || "all") === filter,
+            ),
+        );
+    };
+
     const renderRows = () => {
         updateSwapUi();
+        updateTabCounts();
 
         const visible = rows.filter((row) =>
             filter === "all" ? true : rowKind(row) === filter,
@@ -766,8 +801,11 @@ const setupImport = () => {
 
         if (!visible.length) {
             rowsBody.innerHTML = `<tr><td colspan="5" class="import-table__empty">
-                <span class="material-symbols-outlined">filter_list_off</span>
-                <p>No rows match this filter.</p>
+                <div class="import-table__empty-box">
+                    <span class="material-symbols-outlined">filter_list_off</span>
+                    <strong>No rows match this filter</strong>
+                    <p>Switch to another status, or run preview again after updating the source file.</p>
+                </div>
             </td></tr>`;
             return;
         }
@@ -783,7 +821,7 @@ const setupImport = () => {
                           : "red";
                 const issues =
                     [...(row.errors || []), ...(row.warnings || [])]
-                        .map((i) => i.message)
+                        .map((i) => escapeHtml(i.message))
                         .join("<br>") || "—";
                 const front = previewText(row, "front");
                 const back = previewText(row, "back");
@@ -799,13 +837,9 @@ const setupImport = () => {
     };
 
     // ── Filter tabs ──────────────────────────────────────────
-    app.querySelectorAll("[data-import-filter]").forEach((btn) =>
+    filterButtons.forEach((btn) =>
         btn.addEventListener("click", () => {
-            filter = btn.dataset.importFilter || "all";
-            app.querySelectorAll("[data-import-filter]").forEach((b) =>
-                b.classList.remove("is-mode-active"),
-            );
-            btn.classList.add("is-mode-active");
+            setActiveFilter(btn.dataset.importFilter || "all");
             renderRows();
         }),
     );
@@ -865,6 +899,7 @@ const setupImport = () => {
             confirmed = false;
             rows = payload.rows || [];
             swapFrontBack = false;
+            setActiveFilter("all");
 
             fileMeta.textContent = `${payload.file_name} · ${payload.detected_format} · ${payload.data_lines} data rows`;
             document.querySelector("[data-import-summary-total]").textContent =

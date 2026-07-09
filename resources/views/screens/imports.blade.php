@@ -161,23 +161,37 @@
             </section>
 
             {{-- Card 3: Row Preview --}}
-            <section class="import-card">
-                <div class="import-card-section-head">
-                    <h2 class="import-card-section-head__title">Row Preview</h2>
-                    <p class="import-card-section-head__sub">Rows grouped by status — invalid rows are skipped automatically on confirm.</p>
+            <section class="import-card import-card--preview">
+                <div class="import-card-section-head import-preview-head">
+                    <div class="import-preview-head__icon">
+                        <span class="material-symbols-outlined">table_view</span>
+                    </div>
+                    <div>
+                        <h2 class="import-card-section-head__title">Row Preview</h2>
+                        <p class="import-card-section-head__sub">Rows grouped by status — invalid rows are skipped automatically on confirm.</p>
+                    </div>
                 </div>
 
                 <div class="import-preview-toolbar">
                     <div class="import-tabs">
-                        <button class="import-tab is-mode-active" type="button" data-import-filter="all">All</button>
+                        <button class="import-tab is-mode-active" type="button" data-import-filter="all">
+                            <span>All</span>
+                            <span class="import-tab__count" data-import-tab-count="all">0</span>
+                        </button>
                         <button class="import-tab" type="button" data-import-filter="valid">
-                            <span class="import-tab__dot import-tab__dot--valid"></span>Valid
+                            <span class="import-tab__dot import-tab__dot--valid"></span>
+                            <span>Valid</span>
+                            <span class="import-tab__count" data-import-tab-count="valid">0</span>
                         </button>
                         <button class="import-tab" type="button" data-import-filter="warning">
-                            <span class="import-tab__dot import-tab__dot--warning"></span>Warnings
+                            <span class="import-tab__dot import-tab__dot--warning"></span>
+                            <span>Warnings</span>
+                            <span class="import-tab__count" data-import-tab-count="warning">0</span>
                         </button>
                         <button class="import-tab" type="button" data-import-filter="invalid">
-                            <span class="import-tab__dot import-tab__dot--invalid"></span>Errors
+                            <span class="import-tab__dot import-tab__dot--invalid"></span>
+                            <span>Errors</span>
+                            <span class="import-tab__count" data-import-tab-count="invalid">0</span>
                         </button>
                     </div>
                     <button class="import-swap-btn" type="button" data-import-swap-button aria-pressed="false">
@@ -200,8 +214,11 @@
                         <tbody data-import-rows-body>
                             <tr>
                                 <td colspan="5" class="import-table__empty">
-                                    <span class="material-symbols-outlined">upload_file</span>
-                                    <p>Run preview to see parsed rows.</p>
+                                    <div class="import-table__empty-box">
+                                        <span class="material-symbols-outlined">upload_file</span>
+                                        <strong>No rows previewed yet</strong>
+                                        <p>Choose a deck and TXT file, then run preview to inspect rows before importing.</p>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>

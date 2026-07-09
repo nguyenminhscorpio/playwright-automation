@@ -41,6 +41,8 @@
     </section>
 </div>
 @else
+@php($activeSearch = trim($filters['q'] ?? ''))
+@php($activeStatus = $filters['status'] ?? 'all')
 <div class="dd" data-deck-detail-app data-deck-id="{{ $deck->id }}" data-user-id="{{ $deckDetailUserId ?? '' }}" data-total-cards="{{ $cards->total() }}">
 
     {{-- ── Breadcrumb ─────────────────────────────────────── --}}
@@ -149,6 +151,10 @@
     {{-- ── Toolbar ────────────────────────────────────────── --}}
     <form method="GET" action="{{ route('decks.show', $deck) }}" class="dd-toolbar">
         <div class="dd-toolbar__main">
+            <div class="dd-toolbar__label">
+                <span class="material-symbols-outlined">tune</span>
+                <span>Search & filter</span>
+            </div>
             <div class="dd-toolbar__search">
                 <span class="material-symbols-outlined">search</span>
                 <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Search front or back text..." />
@@ -170,10 +176,31 @@
                     <span>Filter</span>
                 </button>
             </div>
+            @if($activeSearch !== '' || $activeStatus !== 'all')
+                <div class="dd-active-filters" aria-label="Active filters">
+                    @if($activeSearch !== '')
+                        <span class="dd-filter-chip">
+                            <span class="material-symbols-outlined">search</span>
+                            "{{ \Illuminate\Support\Str::limit($activeSearch, 24) }}"
+                        </span>
+                    @endif
+                    @if($activeStatus !== 'all')
+                        <span class="dd-filter-chip dd-filter-chip--status">
+                            <span class="material-symbols-outlined">filter_alt</span>
+                            {{ ucfirst($activeStatus) }}
+                        </span>
+                    @endif
+                    <a href="{{ route('decks.show', $deck) }}" class="dd-filter-chip dd-filter-chip--clear">
+                        <span class="material-symbols-outlined">close</span>
+                        Clear
+                    </a>
+                </div>
+            @endif
         </div>
         <button class="dd-btn dd-btn--danger is-hidden" type="button" data-action-bulk-delete>
             <span class="material-symbols-outlined">delete_sweep</span>
             <span>Delete Selected</span>
+            <span class="dd-btn__count" data-bulk-selected-count>0</span>
         </button>
     </form>
 
@@ -182,7 +209,12 @@
         <div class="dd-table-head">
             <div>
                 <h2 class="dd-table-head__title">Cards</h2>
-                <p class="dd-table-head__meta">{{ $cards->total() }} total cards in this deck</p>
+                <p class="dd-table-head__meta">
+                    {{ $cards->total() }} total cards in this deck
+                    @if($activeSearch !== '' || $activeStatus !== 'all')
+                        · filtered view
+                    @endif
+                </p>
             </div>
             <span class="dd-table-head__status">
                 <span class="material-symbols-outlined">fact_check</span>
@@ -303,16 +335,58 @@
 
     {{-- ── Pagination ─────────────────────────────────────── --}}
     @if($cards->hasPages())
-        <footer class="dd-pagination">
-            <span class="dd-pagination__info">
-                Showing <strong>{{ $cards->firstItem() }}</strong> - <strong>{{ $cards->lastItem() }}</strong> of <strong>{{ $cards->total() }}</strong>
-            </span>
-            <div class="dd-pagination__controls">{{ $cards->links() }}</div>
+        <footer class="dd-pagination" aria-label="Cards pagination">
+            <div class="dd-pagination__info">
+                <span>Showing</span>
+                <strong>{{ $cards->firstItem() }}-{{ $cards->lastItem() }}</strong>
+                <span>of</span>
+                <strong>{{ $cards->total() }}</strong>
+                <span>cards</span>
+            </div>
+            <nav class="dd-pagination__controls" aria-label="Pagination navigation">
+                @if($cards->onFirstPage())
+                    <span class="dd-page-btn dd-page-btn--arrow is-disabled" aria-disabled="true" aria-label="Previous page">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </span>
+                @else
+                    <a class="dd-page-btn dd-page-btn--arrow" href="{{ $cards->previousPageUrl() }}" rel="prev" aria-label="Previous page">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                    </a>
+                @endif
+
+                <div class="dd-page-list">
+                    @foreach($cards->onEachSide(1)->elements() as $element)
+                        @if(is_string($element))
+                            <span class="dd-page-btn dd-page-btn--ellipsis" aria-hidden="true">{{ $element }}</span>
+                        @endif
+
+                        @if(is_array($element))
+                            @foreach($element as $page => $url)
+                                @if($page == $cards->currentPage())
+                                    <span class="dd-page-btn is-active" aria-current="page">{{ $page }}</span>
+                                @else
+                                    <a class="dd-page-btn" href="{{ $url }}" aria-label="Go to page {{ $page }}">{{ $page }}</a>
+                                @endif
+                            @endforeach
+                        @endif
+                    @endforeach
+                </div>
+
+                @if($cards->hasMorePages())
+                    <a class="dd-page-btn dd-page-btn--arrow" href="{{ $cards->nextPageUrl() }}" rel="next" aria-label="Next page">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </a>
+                @else
+                    <span class="dd-page-btn dd-page-btn--arrow is-disabled" aria-disabled="true" aria-label="Next page">
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </span>
+                @endif
+            </nav>
         </footer>
     @endif
 
     {{-- ── Create/Edit Modal ──────────────────────────────── --}}
-    <dialog id="card-modal" class="dd-modal">
+    <dialog id="card-modal" class="dd-modal dd-modal--card">
         <form method="dialog" class="dd-modal__form" data-card-form>
             <div class="dd-modal__header">
                 <div class="dd-modal__header-icon">
