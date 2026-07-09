@@ -1154,15 +1154,38 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 0.9rem 0.15rem 0.2rem;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 0.95rem;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94)),
+        var(--surface);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
 }
 
 .dd-pagination__info {
     display: inline-flex;
     align-items: center;
-    gap: 0.28rem;
+    gap: 0.55rem;
+    min-width: 0;
     color: var(--muted);
     font-size: 0.9rem;
+}
+
+.dd-pagination__info-icon {
+    display: grid;
+    place-items: center;
+    width: 2.15rem;
+    height: 2.15rem;
+    flex: 0 0 auto;
+    border-radius: 0.7rem;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 1.05rem;
+}
+
+.dd-pagination__info-text {
+    min-width: 0;
     white-space: nowrap;
 }
 
@@ -1171,16 +1194,27 @@
     font-weight: 800;
 }
 
+.dd-pagination__page-meta {
+    padding: 0.22rem 0.5rem;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
 .dd-pagination__controls {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
     max-width: 100%;
-    padding: 0.35rem;
+    padding: 0.3rem;
     border: 1px solid rgba(148, 163, 184, 0.24);
-    border-radius: 999px;
+    border-radius: 0.85rem;
     background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .dd-page-list {
@@ -1192,11 +1226,11 @@
 .dd-page-btn {
     display: inline-grid;
     place-items: center;
-    min-width: 2.25rem;
-    height: 2.25rem;
+    min-width: 2.35rem;
+    height: 2.35rem;
     padding-inline: 0.65rem;
     border: 1px solid transparent;
-    border-radius: 999px;
+    border-radius: 0.65rem;
     color: var(--muted);
     font-size: 0.86rem;
     font-weight: 800;
@@ -1211,12 +1245,20 @@
 
 .dd-page-btn:hover {
     background: var(--primary-soft);
+    border-color: rgba(0, 74, 198, 0.12);
     color: var(--primary);
     transform: translateY(-1px);
 }
 
+.dd-page-btn:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.14);
+}
+
 .dd-page-btn.is-active {
     background: var(--primary);
+    border-color: var(--primary);
     color: #fff;
     box-shadow: 0 8px 18px rgba(0, 74, 198, 0.2);
 }
@@ -1224,6 +1266,7 @@
 .dd-page-btn.is-disabled {
     color: rgba(95, 102, 117, 0.38);
     cursor: not-allowed;
+    opacity: 0.72;
 }
 
 .dd-page-btn.is-disabled:hover,
@@ -1233,17 +1276,24 @@
     transform: none;
 }
 
-.dd-page-btn--arrow {
+.dd-page-btn--arrow,
+.dd-page-btn--edge {
     background: var(--surface-low);
 }
 
-.dd-page-btn--arrow .material-symbols-outlined {
+.dd-page-btn--arrow .material-symbols-outlined,
+.dd-page-btn--edge .material-symbols-outlined {
     font-size: 1.15rem;
+}
+
+.dd-page-btn--edge {
+    color: rgba(95, 102, 117, 0.78);
 }
 
 .dd-page-btn--ellipsis {
     min-width: 1.75rem;
     padding-inline: 0.25rem;
+    border-color: transparent;
     color: rgba(95, 102, 117, 0.7);
 }
 
@@ -1251,26 +1301,36 @@
     .dd-pagination {
         align-items: stretch;
         flex-direction: column;
+        padding: 0.8rem;
     }
 
     .dd-pagination__info {
-        justify-content: center;
+        justify-content: space-between;
     }
 
     .dd-pagination__controls {
         justify-content: space-between;
         overflow-x: auto;
-        border-radius: 1rem;
+        border-radius: 0.85rem;
     }
 }
 
 @media (max-width: 520px) {
+    .dd-pagination__info {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .dd-pagination__info-text {
+        white-space: normal;
+    }
+
     .dd-page-list .dd-page-btn:not(.is-active):not(.dd-page-btn--ellipsis) {
         display: none;
     }
 
     .dd-page-btn {
-        min-width: 2.4rem;
+        min-width: 2.45rem;
     }
 }
 

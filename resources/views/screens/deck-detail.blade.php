@@ -355,13 +355,27 @@
         @endphp
         <footer class="dd-pagination" aria-label="Cards pagination">
             <div class="dd-pagination__info">
-                <span>Showing</span>
-                <strong>{{ $cards->firstItem() }}-{{ $cards->lastItem() }}</strong>
-                <span>of</span>
-                <strong>{{ $cards->total() }}</strong>
-                <span>cards</span>
+                <span class="dd-pagination__info-icon material-symbols-outlined" aria-hidden="true">view_list</span>
+                <span class="dd-pagination__info-text">
+                    Showing
+                    <strong>{{ $cards->firstItem() }}-{{ $cards->lastItem() }}</strong>
+                    of
+                    <strong>{{ $cards->total() }}</strong>
+                    cards
+                </span>
+                <span class="dd-pagination__page-meta">Page {{ $currentPage }} of {{ $lastPage }}</span>
             </div>
             <nav class="dd-pagination__controls" aria-label="Pagination navigation">
+                @if($currentPage === 1)
+                    <span class="dd-page-btn dd-page-btn--edge is-disabled" aria-disabled="true" aria-label="First page">
+                        <span class="material-symbols-outlined">first_page</span>
+                    </span>
+                @else
+                    <a class="dd-page-btn dd-page-btn--edge" href="{{ $cards->url(1) }}" aria-label="Go to first page">
+                        <span class="material-symbols-outlined">first_page</span>
+                    </a>
+                @endif
+
                 @if($cards->onFirstPage())
                     <span class="dd-page-btn dd-page-btn--arrow is-disabled" aria-disabled="true" aria-label="Previous page">
                         <span class="material-symbols-outlined">chevron_left</span>
@@ -398,6 +412,16 @@
                     <span class="dd-page-btn dd-page-btn--arrow is-disabled" aria-disabled="true" aria-label="Next page">
                         <span class="material-symbols-outlined">chevron_right</span>
                     </span>
+                @endif
+
+                @if($currentPage === $lastPage)
+                    <span class="dd-page-btn dd-page-btn--edge is-disabled" aria-disabled="true" aria-label="Last page">
+                        <span class="material-symbols-outlined">last_page</span>
+                    </span>
+                @else
+                    <a class="dd-page-btn dd-page-btn--edge" href="{{ $cards->url($lastPage) }}" aria-label="Go to last page">
+                        <span class="material-symbols-outlined">last_page</span>
+                    </a>
                 @endif
             </nav>
         </footer>

@@ -354,13 +354,27 @@
         ?>
         <footer class="dd-pagination" aria-label="Cards pagination">
             <div class="dd-pagination__info">
-                <span>Showing</span>
-                <strong><?php echo e($cards->firstItem()); ?>-<?php echo e($cards->lastItem()); ?></strong>
-                <span>of</span>
-                <strong><?php echo e($cards->total()); ?></strong>
-                <span>cards</span>
+                <span class="dd-pagination__info-icon material-symbols-outlined" aria-hidden="true">view_list</span>
+                <span class="dd-pagination__info-text">
+                    Showing
+                    <strong><?php echo e($cards->firstItem()); ?>-<?php echo e($cards->lastItem()); ?></strong>
+                    of
+                    <strong><?php echo e($cards->total()); ?></strong>
+                    cards
+                </span>
+                <span class="dd-pagination__page-meta">Page <?php echo e($currentPage); ?> of <?php echo e($lastPage); ?></span>
             </div>
             <nav class="dd-pagination__controls" aria-label="Pagination navigation">
+                <?php if($currentPage === 1): ?>
+                    <span class="dd-page-btn dd-page-btn--edge is-disabled" aria-disabled="true" aria-label="First page">
+                        <span class="material-symbols-outlined">first_page</span>
+                    </span>
+                <?php else: ?>
+                    <a class="dd-page-btn dd-page-btn--edge" href="<?php echo e($cards->url(1)); ?>" aria-label="Go to first page">
+                        <span class="material-symbols-outlined">first_page</span>
+                    </a>
+                <?php endif; ?>
+
                 <?php if($cards->onFirstPage()): ?>
                     <span class="dd-page-btn dd-page-btn--arrow is-disabled" aria-disabled="true" aria-label="Previous page">
                         <span class="material-symbols-outlined">chevron_left</span>
@@ -397,6 +411,16 @@
                     <span class="dd-page-btn dd-page-btn--arrow is-disabled" aria-disabled="true" aria-label="Next page">
                         <span class="material-symbols-outlined">chevron_right</span>
                     </span>
+                <?php endif; ?>
+
+                <?php if($currentPage === $lastPage): ?>
+                    <span class="dd-page-btn dd-page-btn--edge is-disabled" aria-disabled="true" aria-label="Last page">
+                        <span class="material-symbols-outlined">last_page</span>
+                    </span>
+                <?php else: ?>
+                    <a class="dd-page-btn dd-page-btn--edge" href="<?php echo e($cards->url($lastPage)); ?>" aria-label="Go to last page">
+                        <span class="material-symbols-outlined">last_page</span>
+                    </a>
                 <?php endif; ?>
             </nav>
         </footer>
