@@ -68,13 +68,14 @@ class ImportController extends Controller
         $validated = $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'import_job_id' => ['required', 'integer', 'exists:import_jobs,id'],
+            'swap_front_back' => ['sometimes', 'boolean'],
         ]);
 
         $user = User::query()->findOrFail($validated['user_id']);
         $importJob = ImportJob::query()->findOrFail($validated['import_job_id']);
 
         return response()->json(
-            $this->txtImportService->confirm($user, $importJob)
+            $this->txtImportService->confirm($user, $importJob, (bool) ($validated['swap_front_back'] ?? false))
         );
     }
 

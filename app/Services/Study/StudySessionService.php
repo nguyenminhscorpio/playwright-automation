@@ -11,7 +11,7 @@ class StudySessionService
 {
     public function buildSession(User $user, ?int $deckId, string $mode): array
     {
-        $resolvedMode = in_array($mode, ['flip', 'typing'], true) ? $mode : 'flip';
+        $resolvedMode = in_array($mode, ['flip', 'typing'], true) ? $mode : 'typing';
         $now = CarbonImmutable::now();
 
         $dueCardsQuery = $this->baseCardsQuery($user, $deckId)

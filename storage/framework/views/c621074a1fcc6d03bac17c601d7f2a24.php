@@ -1,9 +1,7 @@
-@extends('layouts.app')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
     <section class="page-section">
 
-        {{-- Compact page header: title left, stepper right --}}
+        
         <div class="import-page-header">
             <div>
                 <h1 class="import-page-header__title">Import Cards</h1>
@@ -33,9 +31,9 @@
             </div>
         </div>
 
-        <div class="import-shell" data-import-app data-import-user-id="{{ $importUserId ?? '' }}" data-import-selected-deck-id="{{ $importSelectedDeckId ?? '' }}">
+        <div class="import-shell" data-import-app data-import-user-id="<?php echo e($importUserId ?? ''); ?>" data-import-selected-deck-id="<?php echo e($importSelectedDeckId ?? ''); ?>">
 
-            {{-- Card 1: Configure --}}
+            
             <section class="import-card">
                 <div class="import-card__head">
                     <div class="import-card__head-icon">
@@ -47,22 +45,22 @@
                     </div>
                 </div>
 
-                {{-- 2-column form: deck select | file dropzone --}}
+                
                 <div class="import-form">
                     <div class="import-field">
                         <span class="import-field__label">Target deck</span>
                         <div class="deck-select-wrap" data-deck-select-wrap>
-                            {{-- Hidden native select — JS reads options + dispatches events here --}}
+                            
                             <select class="import-select" data-import-deck-select style="display:none">
-                                <option value="" disabled @selected(($importSelectedDeckId ?? null) === null)>Select a deck...</option>
-                                @forelse ($importDecks as $deck)
-                                    <option value="{{ $deck->id }}" @selected(($importSelectedDeckId ?? null) === $deck->id)>{{ $deck->name }}</option>
-                                @empty
+                                <option value="" disabled <?php if(($importSelectedDeckId ?? null) === null): echo 'selected'; endif; ?>>Select a deck...</option>
+                                <?php $__empty_1 = true; $__currentLoopData = $importDecks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $deck): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                    <option value="<?php echo e($deck->id); ?>" <?php if(($importSelectedDeckId ?? null) === $deck->id): echo 'selected'; endif; ?>><?php echo e($deck->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <option value="" disabled>No deck available</option>
-                                @endforelse
+                                <?php endif; ?>
                                 <option value="NEW_DECK">+ Create New Deck...</option>
                             </select>
-                            {{-- Custom dropdown built by JS --}}
+                            
                         </div>
                     </div>
 
@@ -99,7 +97,7 @@
                     </button>
                 </div>
 
-                {{-- Progress indicator --}}
+                
                 <div class="import-progress is-hidden" data-import-progress>
                     <div class="import-progress__header">
                         <span class="material-symbols-outlined import-progress__spinner">autorenew</span>
@@ -114,7 +112,7 @@
                 <div class="import-feedback is-hidden" data-import-feedback></div>
             </section>
 
-            {{-- Card 2: Preview Summary --}}
+            
             <section class="import-card">
                 <div class="import-card-section-head">
                     <h2 class="import-card-section-head__title">Preview Summary</h2>
@@ -160,7 +158,7 @@
                 </div>
             </section>
 
-            {{-- Card 3: Row Preview --}}
+            
             <section class="import-card">
                 <div class="import-card-section-head">
                     <h2 class="import-card-section-head__title">Row Preview</h2>
@@ -211,4 +209,6 @@
 
         </div>
     </section>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\playwright-automation\resources\views/screens/imports.blade.php ENDPATH**/ ?>

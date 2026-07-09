@@ -35,7 +35,7 @@ class StudySessionController extends Controller
             $this->studySessionService->buildSession(
                 $user,
                 $validated['deck_id'] ?? null,
-                $validated['mode'] ?? 'flip',
+                $validated['mode'] ?? 'typing',
             )
         );
     }
@@ -44,7 +44,7 @@ class StudySessionController extends Controller
     {
         $validated = $request->validate([
             'mode' => ['required', Rule::in(['typing'])],
-            'user_answer' => ['required', 'string'],
+            'user_answer' => ['present', 'nullable', 'string'],
         ]);
 
         $card->loadMissing('note:id,back_plain_text');
@@ -60,7 +60,7 @@ class StudySessionController extends Controller
 
         return response()->json(
             $this->answerCheckingService->check(
-                $validated['user_answer'],
+                $validated['user_answer'] ?? '',
                 $correctAnswer,
             )
         );

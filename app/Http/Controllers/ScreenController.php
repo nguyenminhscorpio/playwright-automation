@@ -56,11 +56,23 @@ class ScreenController extends Controller
     {
         [$user] = $this->resolveStudyContext($request);
 
-        $deckModel = Deck::query()->where('user_id', $user?->id)->findOrFail($deck);
         $allDecks = Deck::query()
             ->where('user_id', $user?->id)
             ->orderBy('name')
             ->get(['id', 'name']);
+
+        $deckModel = $allDecks->firstWhere('id', (int) $deck);
+
+        if ($deckModel === null) {
+            return view('screens.deck-detail', [
+                'title' => 'FlashMind - No Deck Found',
+                'page' => 'deck-detail',
+                'deckDetailUserId' => $user?->id,
+                'deck' => null,
+                'allDecks' => $allDecks,
+            ]);
+        }
+
         $filters = [
             'deck_id' => $deckModel->id,
             'q' => $request->string('q')->toString(),
@@ -107,7 +119,21 @@ class ScreenController extends Controller
 
     public function imports(Request $request): View
     {
-        [$user, $decks, $selectedDeck] = $this->resolveStudyContext($request);
+        $user = auth()->user();
+        $deckId = $request->integer('deck_id');
+        $decks = collect();
+        $selectedDeck = null;
+
+        if ($user !== null) {
+            $decks = Deck::query()
+                ->where('user_id', $user->id)
+                ->orderBy('id')
+                ->get(['id', 'name', 'description']);
+
+            if ($deckId > 0) {
+                $selectedDeck = $decks->firstWhere('id', $deckId);
+            }
+        }
 
         return view('screens.imports', [
             'title' => 'FlashMind - Import TXT',

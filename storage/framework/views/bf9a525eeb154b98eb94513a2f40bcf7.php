@@ -1,20 +1,32 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>{{ $title ?? 'FlashMind' }}</title>
+        <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+        <title><?php echo e($title ?? 'FlashMind'); ?></title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@500;600;700;800&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400" rel="stylesheet">
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @stack('styles')
+        <?php
+            $manifestPath = public_path('build/manifest.json');
+            $manifest = file_exists($manifestPath)
+                ? json_decode(file_get_contents($manifestPath), true)
+                : [];
+            $cssFile = $manifest['resources/css/app.css']['file'] ?? '';
+            $jsFile  = $manifest['resources/js/app.js']['file'] ?? '';
+        ?>
+        <?php if($cssFile): ?>
+            <link rel="stylesheet" href="<?php echo e(asset('build/' . $cssFile)); ?>" />
+        <?php endif; ?>
+        <?php if($jsFile): ?>
+            <script type="module" src="<?php echo e(asset('build/' . $jsFile)); ?>"></script>
+        <?php endif; ?>
 
-        @php
+        <?php
             $authUser     = auth()->user();
             $authName     = $authUser?->name ?? 'Learner';
             $authInitials = collect(explode(' ', trim($authName)))
@@ -38,29 +50,29 @@
                 'answer' => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
                 default => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
             };
-        @endphp
+        ?>
     </head>
     <body
         class="app-body"
-        data-auth-user-id="{{ $authUser?->id ?? '' }}"
-        data-page="{{ $page ?? 'default' }}"
-        data-study-screen="{{ $studyScreen ?? '' }}"
-        data-study-mode="{{ $studyMode }}"
-        data-study-user-id="{{ $studyUserId ?? '' }}"
-        data-study-deck-id="{{ $studyDeckId ?? '' }}"
-        data-study-deck-name="{{ $studyDeckName ?? '' }}"
-        data-study-front-url="{{ route('study.front', $studyDeckQuery) }}"
-        data-study-typing-url="{{ route('study.typing', $studyDeckQuery) }}"
-        data-study-answer-url="{{ route('study.answer', $studyDeckQuery) }}"
-        data-study-session-api-url="{{ url('/api/study/session') }}"
-        data-study-check-answer-url-template="{{ url('/api/study/cards/__CARD__/check-answer') }}"
-        data-study-rate-url-template="{{ url('/api/study/cards/__CARD__/rate') }}"
-        data-import-preview-url="{{ url('/api/imports/txt/preview') }}"
-        data-import-confirm-url="{{ url('/api/imports/txt/confirm') }}"
-        data-decks-api-url="{{ url('/api/decks') }}"
-        data-deck-url-template="{{ url('/api/decks/__DECK__') }}"
-        data-cards-api-url="{{ url('/api/cards') }}"
-        data-card-url-template="{{ url('/api/cards/__CARD__') }}"
+        data-auth-user-id="<?php echo e($authUser?->id ?? ''); ?>"
+        data-page="<?php echo e($page ?? 'default'); ?>"
+        data-study-screen="<?php echo e($studyScreen ?? ''); ?>"
+        data-study-mode="<?php echo e($studyMode); ?>"
+        data-study-user-id="<?php echo e($studyUserId ?? ''); ?>"
+        data-study-deck-id="<?php echo e($studyDeckId ?? ''); ?>"
+        data-study-deck-name="<?php echo e($studyDeckName ?? ''); ?>"
+        data-study-front-url="<?php echo e(route('study.front', $studyDeckQuery)); ?>"
+        data-study-typing-url="<?php echo e(route('study.typing', $studyDeckQuery)); ?>"
+        data-study-answer-url="<?php echo e(route('study.answer', $studyDeckQuery)); ?>"
+        data-study-session-api-url="<?php echo e(url('/api/study/session')); ?>"
+        data-study-check-answer-url-template="<?php echo e(url('/api/study/cards/__CARD__/check-answer')); ?>"
+        data-study-rate-url-template="<?php echo e(url('/api/study/cards/__CARD__/rate')); ?>"
+        data-import-preview-url="<?php echo e(url('/api/imports/txt/preview')); ?>"
+        data-import-confirm-url="<?php echo e(url('/api/imports/txt/confirm')); ?>"
+        data-decks-api-url="<?php echo e(url('/api/decks')); ?>"
+        data-deck-url-template="<?php echo e(url('/api/decks/__DECK__')); ?>"
+        data-cards-api-url="<?php echo e(url('/api/cards')); ?>"
+        data-card-url-template="<?php echo e(url('/api/cards/__CARD__')); ?>"
     >
         <div class="app-shell">
             <aside class="sidebar">
@@ -76,30 +88,30 @@
 
                 <nav class="nav">
                     <span class="nav__label">Menu</span>
-                    <a href="{{ route('dashboard') }}" class="nav__link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}">
+                    <a href="<?php echo e(route('dashboard')); ?>" class="nav__link <?php echo e(request()->routeIs('dashboard') ? 'is-active' : ''); ?>">
                         <div class="nav__icon"><span class="material-symbols-outlined">dashboard</span></div>
                         <span>Dashboard</span>
                     </a>
-                    @php($navDeckId = request()->route('deck') ?? ($authUser?->decks()->value('id') ?? 1))
-                    <a href="{{ request()->routeIs('decks.*') ? url()->current() : route('decks.show', $navDeckId) }}" class="nav__link {{ request()->routeIs('decks.*') ? 'is-active' : '' }}">
+                    <?php ($navDeckId = request()->route('deck') ?? ($authUser?->decks()->value('id') ?? 1)); ?>
+                    <a href="<?php echo e(request()->routeIs('decks.*') ? url()->current() : route('decks.show', $navDeckId)); ?>" class="nav__link <?php echo e(request()->routeIs('decks.*') ? 'is-active' : ''); ?>">
                         <div class="nav__icon"><span class="material-symbols-outlined">layers</span></div>
                         <span>My Decks</span>
                     </a>
-                    <a href="{{ route('study.typing', ['mode' => 'typing', 'sv' => $studyRouteVersion]) }}" class="nav__link {{ request()->routeIs('study.*') ? 'is-active' : '' }}">
+                    <a href="<?php echo e(route('study.typing', ['mode' => 'typing', 'sv' => $studyRouteVersion])); ?>" class="nav__link <?php echo e(request()->routeIs('study.*') ? 'is-active' : ''); ?>">
                         <div class="nav__icon"><span class="material-symbols-outlined">school</span></div>
                         <span>Study Session</span>
                     </a>
-                    <a href="{{ route('imports.index') }}" class="nav__link {{ request()->routeIs('imports.*') ? 'is-active' : '' }}">
+                    <a href="<?php echo e(route('imports.index')); ?>" class="nav__link <?php echo e(request()->routeIs('imports.*') ? 'is-active' : ''); ?>">
                         <div class="nav__icon"><span class="material-symbols-outlined">upload_file</span></div>
                         <span>Import</span>
                     </a>
                 </nav>
 
                 <div class="sidebar__footer">
-                    <a href="{{ route('profile') }}" class="sidebar__user">
-                        <div class="sidebar__user-avatar">{{ $authInitials }}</div>
+                    <a href="<?php echo e(route('profile')); ?>" class="sidebar__user">
+                        <div class="sidebar__user-avatar"><?php echo e($authInitials); ?></div>
                         <div class="sidebar__user-info">
-                            <div class="sidebar__user-name">{{ $authName }}</div>
+                            <div class="sidebar__user-name"><?php echo e($authName); ?></div>
                             <div class="sidebar__user-status">
                                 <span class="sidebar__user-dot"></span>Active
                             </div>
@@ -118,40 +130,40 @@
 
                     <div class="topbar__center">
                         <div class="topbar__page-label">
-                            @php($pageLabels = ['dashboard' => 'Dashboard', 'deck-detail' => 'My Decks', 'imports' => 'Import'])
+                            <?php ($pageLabels = ['dashboard' => 'Dashboard', 'deck-detail' => 'My Decks', 'imports' => 'Import']); ?>
                             <span class="material-symbols-outlined topbar__page-icon">
-                                @switch($page ?? 'default')
-                                    @case('dashboard') dashboard @break
-                                    @case('deck-detail') layers @break
-                                    @case('imports') upload_file @break
-                                    @default school @break
-                                @endswitch
+                                <?php switch($page ?? 'default'):
+                                    case ('dashboard'): ?> dashboard <?php break; ?>
+                                    <?php case ('deck-detail'): ?> layers <?php break; ?>
+                                    <?php case ('imports'): ?> upload_file <?php break; ?>
+                                    <?php default: ?> school <?php break; ?>
+                                <?php endswitch; ?>
                             </span>
-                            <span>{{ $pageLabels[$page ?? ''] ?? 'FlashMind' }}</span>
+                            <span><?php echo e($pageLabels[$page ?? ''] ?? 'FlashMind'); ?></span>
                         </div>
                     </div>
 
                     <div class="topbar__actions">
-                        @if ($isStudyPage)
+                        <?php if($isStudyPage): ?>
                             <div class="study-mode-switch" data-study-mode-switch>
-                                <a href="{{ $flipModeUrl }}" class="study-mode-switch__option {{ $studyMode === 'flip' ? 'is-active' : '' }}" data-study-mode-option="flip" aria-pressed="{{ $studyMode === 'flip' ? 'true' : 'false' }}">
+                                <a href="<?php echo e($flipModeUrl); ?>" class="study-mode-switch__option <?php echo e($studyMode === 'flip' ? 'is-active' : ''); ?>" data-study-mode-option="flip" aria-pressed="<?php echo e($studyMode === 'flip' ? 'true' : 'false'); ?>">
                                     <span class="material-symbols-outlined">style</span>
                                     <span>Flip</span>
                                 </a>
-                                <a href="{{ $typingModeUrl }}" class="study-mode-switch__option {{ $studyMode === 'typing' ? 'is-active' : '' }}" data-study-mode-option="typing" aria-pressed="{{ $studyMode === 'typing' ? 'true' : 'false' }}">
+                                <a href="<?php echo e($typingModeUrl); ?>" class="study-mode-switch__option <?php echo e($studyMode === 'typing' ? 'is-active' : ''); ?>" data-study-mode-option="typing" aria-pressed="<?php echo e($studyMode === 'typing' ? 'true' : 'false'); ?>">
                                     <span class="material-symbols-outlined">keyboard_alt</span>
                                     <span>Typing</span>
                                 </a>
                             </div>
-                        @endif
-                        <a href="{{ route('profile') }}" class="user-chip" title="{{ auth()->user()?->name ?? 'Profile' }}">
-                            <span>{{ $authInitials ?? 'ME' }}</span>
+                        <?php endif; ?>
+                        <a href="<?php echo e(route('profile')); ?>" class="user-chip" title="<?php echo e(auth()->user()?->name ?? 'Profile'); ?>">
+                            <span><?php echo e($authInitials ?? 'ME'); ?></span>
                         </a>
                     </div>
                 </header>
 
                 <main class="page">
-                    @yield('content')
+                    <?php echo $__env->yieldContent('content'); ?>
                 </main>
             </div>
         </div>
@@ -191,3 +203,4 @@
         </dialog>
     </body>
 </html>
+<?php /**PATH C:\laragon\www\playwright-automation\resources\views/layouts/app.blade.php ENDPATH**/ ?>

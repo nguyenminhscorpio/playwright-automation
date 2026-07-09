@@ -550,6 +550,10 @@ const setupDeckSelect = (nativeSelect) => {
             if (sel) {
                 labelEl.textContent = sel.text;
                 labelEl.className = "deck-select-trigger__label";
+            } else {
+                labelEl.textContent = "Select a deck...";
+                labelEl.className =
+                    "deck-select-trigger__label deck-select-trigger__label--empty";
             }
         }
     });
@@ -583,11 +587,15 @@ const setupImport = () => {
     const progressLabel = app.querySelector("[data-import-progress-label]");
     const progressPct = app.querySelector("[data-import-progress-pct]");
     const progressBar = app.querySelector("[data-import-progress-bar]");
+    const swapButton = app.querySelector("[data-import-swap-button]");
+    const frontHeading = app.querySelector("[data-import-front-heading]");
+    const backHeading = app.querySelector("[data-import-back-heading]");
 
     let importJobId = null;
     let confirmed = false;
     let rows = [];
     let filter = "all";
+    let swapFrontBack = false;
     let stepTimer = null;
 
     // ── Step indicator ───────────────────────────────────────
@@ -716,7 +724,42 @@ const setupImport = () => {
               ? "warning"
               : "valid";
 
+    const escapeHtml = (value) =>
+        String(value ?? "").replace(
+            /[&<>"']/g,
+            (char) =>
+                ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#039;",
+                })[char],
+        );
+
+    const previewText = (row, side) => {
+        const sourceSide =
+            swapFrontBack && row.status !== "invalid"
+                ? side === "front"
+                    ? "back"
+                    : "front"
+                : side;
+
+        return (row.data?.[`${sourceSide}_text`] || "").slice(0, 140);
+    };
+
+    const updateSwapUi = () => {
+        if (frontHeading) frontHeading.textContent = swapFrontBack ? "Back" : "Front";
+        if (backHeading) backHeading.textContent = swapFrontBack ? "Front" : "Back";
+        if (swapButton) {
+            swapButton.classList.toggle("is-active", swapFrontBack);
+            swapButton.setAttribute("aria-pressed", String(swapFrontBack));
+        }
+    };
+
     const renderRows = () => {
+        updateSwapUi();
+
         const visible = rows.filter((row) =>
             filter === "all" ? true : rowKind(row) === filter,
         );
@@ -742,12 +785,12 @@ const setupImport = () => {
                     [...(row.errors || []), ...(row.warnings || [])]
                         .map((i) => i.message)
                         .join("<br>") || "—";
-                const front = (row.data?.front_text || "").slice(0, 140);
-                const back = (row.data?.back_text || "").slice(0, 140);
+                const front = previewText(row, "front");
+                const back = previewText(row, "back");
                 return `<tr data-row-kind="${kind}">
                 <td class="import-table__col-num" style="color:var(--muted);font-size:0.85rem">${row.index}</td>
-                <td>${front}</td>
-                <td>${back}</td>
+                <td>${escapeHtml(front)}</td>
+                <td>${escapeHtml(back)}</td>
                 <td><span class="status-badge status-badge--${badge}">${kind}</span></td>
                 <td class="import-issue-copy">${issues}</td>
             </tr>`;
@@ -768,6 +811,18 @@ const setupImport = () => {
     );
 
     // ── Preview ──────────────────────────────────────────────
+    swapButton?.addEventListener("click", () => {
+        swapFrontBack = !swapFrontBack;
+        if (importJobId && !confirmed) confirmButton.disabled = false;
+        renderRows();
+        showFeedback(
+            swapFrontBack
+                ? "Front/Back swapped for preview and confirm import."
+                : "Front/Back restored to the original order.",
+            "info",
+        );
+    });
+
     previewButton?.addEventListener("click", async () => {
         const file = fileInput?.files?.[0];
         const deckId = Number(deckSelect?.value || "");
@@ -809,6 +864,7 @@ const setupImport = () => {
             importJobId = payload.import_job_id;
             confirmed = false;
             rows = payload.rows || [];
+            swapFrontBack = false;
 
             fileMeta.textContent = `${payload.file_name} · ${payload.detected_format} · ${payload.data_lines} data rows`;
             document.querySelector("[data-import-summary-total]").textContent =
@@ -871,6 +927,7 @@ const setupImport = () => {
                     body: JSON.stringify({
                         user_id: Number(app.dataset.importUserId || ""),
                         import_job_id: importJobId,
+                        swap_front_back: swapFrontBack,
                     }),
                 },
             );
@@ -886,6 +943,8 @@ const setupImport = () => {
                 "success",
             );
             setStep(3);
+            deckSelect.value = "";
+            deckSelect.dispatchEvent(new Event("change", { bubbles: true }));
             confirmButton.innerHTML =
                 '<span class="material-symbols-outlined">check</span><span>Imported</span>';
         } catch (err) {
@@ -994,7 +1053,7 @@ const setupStudy = async () => {
     const revealButton = document.querySelector("[data-study-reveal-button]");
     if (revealButton) {
         revealButton.disabled = false;
-        revealButton.addEventListener("click", () => {
+        const revealAnswer = () => {
             sessionStorage.setItem(
                 "flashmind-study-reveal",
                 JSON.stringify({ session, card, mode: session.mode }),
@@ -1006,18 +1065,32 @@ const setupStudy = async () => {
                 (body.dataset.studyDeckId
                     ? "&deck_id=" + body.dataset.studyDeckId
                     : "");
+        };
+
+        revealButton.addEventListener("click", revealAnswer);
+        document.addEventListener("keydown", (event) => {
+            if (
+                event.defaultPrevented ||
+                event.key !== "Enter" ||
+                event.shiftKey ||
+                event.ctrlKey ||
+                event.altKey ||
+                event.metaKey ||
+                event.isComposing
+            ) {
+                return;
+            }
+            event.preventDefault();
+            revealAnswer();
         });
     }
 
     const checkButton = document.querySelector("[data-study-check-button]");
+    const answerInput = document.querySelector("[data-study-answer-input]");
     if (checkButton) {
         checkButton.disabled = false;
-        checkButton.addEventListener("click", async () => {
-            const userAnswer =
-                document
-                    .querySelector("[data-study-answer-input]")
-                    ?.value?.trim() || "";
-            if (!userAnswer) return;
+        const checkTypedAnswer = async () => {
+            const userAnswer = answerInput?.value?.trim() || "";
             const result = await fetchJson(
                 replaceToken(
                     body.dataset.studyCheckAnswerUrlTemplate,
@@ -1039,6 +1112,7 @@ const setupStudy = async () => {
                     card,
                     mode: "typing",
                     user_answer: userAnswer,
+                    answer_check: result,
                     judged_result: result.result,
                 }),
             );
@@ -1048,8 +1122,113 @@ const setupStudy = async () => {
                 (body.dataset.studyDeckId
                     ? "&deck_id=" + body.dataset.studyDeckId
                     : "");
+        };
+
+        checkButton.addEventListener("click", checkTypedAnswer);
+        answerInput?.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" || event.shiftKey || event.isComposing) {
+                return;
+            }
+            event.preventDefault();
+            checkTypedAnswer();
+        });
+        document.addEventListener("keydown", (event) => {
+            if (
+                event.defaultPrevented ||
+                event.key !== "Enter" ||
+                event.shiftKey ||
+                event.ctrlKey ||
+                event.altKey ||
+                event.metaKey ||
+                event.isComposing
+            ) {
+                return;
+            }
+            event.preventDefault();
+            checkTypedAnswer();
         });
     }
+
+    const escapeHtml = (value) =>
+        String(value ?? "").replace(
+            /[&<>"']/g,
+            (char) =>
+                ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#039;",
+                })[char],
+        );
+
+    const charDiffHtml = (userAnswer, correctAnswer) => {
+        const userChars = Array.from(userAnswer || "");
+        const correctChars = Array.from(correctAnswer || "");
+        const maxLength = Math.max(userChars.length, correctChars.length);
+
+        const userLine = [];
+        const correctLine = [];
+
+        for (let i = 0; i < maxLength; i++) {
+            const userChar = userChars[i] ?? "";
+            const correctChar = correctChars[i] ?? "";
+            const isMatch = userChar !== "" && userChar === correctChar;
+
+            if (userChar !== "") {
+                userLine.push(
+                    `<span class="${isMatch ? "is-correct" : "is-wrong"}">${escapeHtml(userChar)}</span>`,
+                );
+            } else {
+                userLine.push('<span class="is-missing">_</span>');
+            }
+
+            if (correctChar !== "") {
+                correctLine.push(
+                    `<span class="${isMatch ? "is-correct" : "is-expected"}">${escapeHtml(correctChar)}</span>`,
+                );
+            }
+        }
+
+        return `
+            <div class="answer-diff__line answer-diff__line--user">${userLine.join("")}</div>
+            <div class="answer-diff__arrow">↓</div>
+            <div class="answer-diff__line answer-diff__line--correct">${correctLine.join("")}</div>
+        `;
+    };
+
+    const renderAnswerJudgement = (stored) => {
+        const judgement = document.querySelector("[data-study-judgement]");
+        const check = stored.answer_check;
+        if (!judgement || !check) return;
+
+        const percent = Number(check.similarity_percent ?? 0);
+        const userAnswer = check.user_answer || stored.user_answer || "";
+        const correctAnswer =
+            check.correct_answer ||
+            stored.card?.back_plain_text ||
+            stored.card?.back_text ||
+            "";
+
+        const label =
+            check.result === "correct"
+                ? "Correct"
+                : check.result === "close_match"
+                  ? "Close match"
+                  : "Needs review";
+
+        judgement.dataset.result = check.result || "incorrect";
+        judgement.classList.remove("is-hidden");
+        judgement.innerHTML = `
+            <div class="answer-score">
+                <strong>${Math.round(percent)}%</strong>
+                <span>${label}</span>
+            </div>
+            <div class="answer-diff" aria-label="Answer comparison">
+                ${charDiffHtml(userAnswer, correctAnswer)}
+            </div>
+        `;
+    };
 
     if (body.dataset.studyScreen === "answer") {
         const stored = JSON.parse(
@@ -1072,6 +1251,7 @@ const setupStudy = async () => {
             document
                 .querySelector("[data-study-user-answer-section]")
                 ?.classList.toggle("is-hidden", !stored.user_answer);
+            renderAnswerJudgement(stored);
 
             if (stored.session && stored.session.progress) {
                 setText("[data-study-new-count]", stored.session.progress.new);

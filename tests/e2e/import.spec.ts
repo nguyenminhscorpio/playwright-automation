@@ -55,6 +55,20 @@ test.describe('Import Flow', () => {
     await expect(importPage.previewRows).toHaveCount(3);
   });
 
+  test('Should swap front and back in row preview', async ({ page }) => {
+    const importPage = new ImportPage(page);
+
+    await importPage.createDeckAndPreview(
+      `Test Deck ${Date.now()}`,
+      'Front A\tBack A\n'
+    );
+
+    await importPage.swapButton.click();
+
+    await expect(importPage.rowCells(0).nth(1)).toContainText('Back A');
+    await expect(importPage.rowCells(0).nth(2)).toContainText('Front A');
+  });
+
   test('Should show success message after confirming import', async ({ page }) => {
     const importPage = new ImportPage(page);
 

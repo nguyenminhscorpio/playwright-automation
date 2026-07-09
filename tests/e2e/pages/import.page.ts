@@ -8,6 +8,7 @@ export class ImportPage {
   readonly fileInput: Locator;
   readonly previewButton: Locator;
   readonly confirmButton: Locator;
+  readonly swapButton: Locator;
   readonly feedback: Locator;
   readonly previewRows: Locator;
 
@@ -18,6 +19,7 @@ export class ImportPage {
     this.fileInput = page.locator('[data-import-file-input]');
     this.previewButton = page.getByRole('button', { name: /Preview Import/i });
     this.confirmButton = page.getByRole('button', { name: /Confirm Import/i });
+    this.swapButton = page.getByRole('button', { name: /Swap Front\/Back/i });
     this.feedback = page.locator('[data-import-feedback]');
     this.previewRows = page.locator('[data-import-rows-body] tr');
   }

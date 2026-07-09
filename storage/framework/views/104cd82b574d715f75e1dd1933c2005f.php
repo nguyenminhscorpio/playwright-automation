@@ -1,37 +1,35 @@
-@extends('layouts.app')
-
-@section('content')
-    @php
+<?php $__env->startSection('content'); ?>
+    <?php
         $hour = now()->hour;
         $greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
         $progressPercent = $dashboardStats['monthly_goal'] > 0
             ? min(100, (int) round(($dashboardStats['monthly_learned'] / $dashboardStats['monthly_goal']) * 100))
             : 0;
         $firstDeck = $dashboardDecks[0] ?? null;
-    @endphp
+    ?>
 
-    <section class="page-section" data-dashboard-app data-dashboard-user-id="{{ $dashboardUserId ?? '' }}">
+    <section class="page-section" data-dashboard-app data-dashboard-user-id="<?php echo e($dashboardUserId ?? ''); ?>">
 
-        {{-- ── Greeting header ──────────────────────────────── --}}
+        
         <div class="dash-greeting">
             <div>
-                <h1 class="dash-greeting__title">{{ $greeting }}, {{ $dashboardUserName }} 👋</h1>
+                <h1 class="dash-greeting__title"><?php echo e($greeting); ?>, <?php echo e($dashboardUserName); ?> 👋</h1>
                 <p class="dash-greeting__sub">Track your streak, review due cards, and manage your decks.</p>
             </div>
             <div class="dash-greeting__actions">
-                <a href="{{ route('study.typing', $firstDeck ? ['deck_id' => $firstDeck['id'], 'mode' => 'typing'] : ['mode' => 'typing']) }}"
+                <a href="<?php echo e(route('study.typing', $firstDeck ? ['deck_id' => $firstDeck['id'], 'mode' => 'typing'] : ['mode' => 'typing'])); ?>"
                    class="dash-btn dash-btn--primary">
                     <span class="material-symbols-outlined">school</span>
                     Study Now
                 </a>
-                <a href="{{ route('imports.index') }}" class="dash-btn">
+                <a href="<?php echo e(route('imports.index')); ?>" class="dash-btn">
                     <span class="material-symbols-outlined">upload_file</span>
                     Import
                 </a>
             </div>
         </div>
 
-        {{-- ── Stat cards ────────────────────────────────────── --}}
+        
         <div class="dash-stats">
 
             <article class="dash-stat dash-stat--streak">
@@ -40,18 +38,18 @@
                 </div>
                 <div class="dash-stat__body">
                     <span class="dash-stat__label">Daily Streak</span>
-                    <div class="dash-stat__val">{{ $dashboardStats['daily_streak'] }}<span class="dash-stat__unit">days</span></div>
+                    <div class="dash-stat__val"><?php echo e($dashboardStats['daily_streak']); ?><span class="dash-stat__unit">days</span></div>
                     <p class="dash-stat__hint">Keep the chain alive today</p>
                 </div>
             </article>
 
-            <article class="dash-stat {{ $dashboardStats['totals']['due_count'] > 0 ? 'dash-stat--due' : '' }}">
+            <article class="dash-stat <?php echo e($dashboardStats['totals']['due_count'] > 0 ? 'dash-stat--due' : ''); ?>">
                 <div class="dash-stat__icon">
                     <span class="material-symbols-outlined">task_alt</span>
                 </div>
                 <div class="dash-stat__body">
                     <span class="dash-stat__label">Due Today</span>
-                    <div class="dash-stat__val">{{ $dashboardStats['totals']['due_count'] }}<span class="dash-stat__unit">cards</span></div>
+                    <div class="dash-stat__val"><?php echo e($dashboardStats['totals']['due_count']); ?><span class="dash-stat__unit">cards</span></div>
                     <p class="dash-stat__hint">Learning, relearning & review</p>
                 </div>
             </article>
@@ -62,8 +60,8 @@
                 </div>
                 <div class="dash-stat__body">
                     <span class="dash-stat__label">Library</span>
-                    <div class="dash-stat__val">{{ $dashboardStats['totals']['card_count'] }}<span class="dash-stat__unit">cards</span></div>
-                    <p class="dash-stat__hint">{{ $dashboardStats['totals']['deck_count'] }} decks · {{ $dashboardStats['totals']['note_count'] }} notes</p>
+                    <div class="dash-stat__val"><?php echo e($dashboardStats['totals']['card_count']); ?><span class="dash-stat__unit">cards</span></div>
+                    <p class="dash-stat__hint"><?php echo e($dashboardStats['totals']['deck_count']); ?> decks · <?php echo e($dashboardStats['totals']['note_count']); ?> notes</p>
                 </div>
             </article>
 
@@ -73,17 +71,17 @@
                 </div>
                 <div class="dash-stat__body">
                     <span class="dash-stat__label">Monthly Goal</span>
-                    <div class="dash-stat__val">{{ $progressPercent }}<span class="dash-stat__unit">%</span></div>
+                    <div class="dash-stat__val"><?php echo e($progressPercent); ?><span class="dash-stat__unit">%</span></div>
                     <div class="dash-stat__bar-wrap">
-                        <div class="dash-stat__bar-fill" style="width:{{ $progressPercent }}%"></div>
+                        <div class="dash-stat__bar-fill" style="width:<?php echo e($progressPercent); ?>%"></div>
                     </div>
-                    <p class="dash-stat__hint">{{ $dashboardStats['monthly_learned'] }} / {{ $dashboardStats['monthly_goal'] }} graduated</p>
+                    <p class="dash-stat__hint"><?php echo e($dashboardStats['monthly_learned']); ?> / <?php echo e($dashboardStats['monthly_goal']); ?> graduated</p>
                 </div>
             </article>
 
         </div>
 
-        {{-- ── Active Decks ──────────────────────────────────── --}}
+        
         <div class="dash-section-hd">
             <div>
                 <h2 class="dash-section-hd__title">Active Decks</h2>
@@ -95,54 +93,55 @@
         </div>
 
         <div class="dash-deck-grid">
-            @forelse ($dashboardDecks as $deck)
-                <article class="dash-deck" data-deck-card data-deck-id="{{ $deck['id'] }}">
+            <?php $__empty_1 = true; $__currentLoopData = $dashboardDecks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $deck): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <article class="dash-deck" data-deck-card data-deck-id="<?php echo e($deck['id']); ?>">
 
                     <div class="dash-deck__top">
                         <div class="dash-deck__icon">
                             <span class="material-symbols-outlined">style</span>
                         </div>
                         <div class="dash-deck__badges">
-                            @if ($deck['due_count'] > 0)
-                                <span class="dash-badge dash-badge--due">{{ $deck['due_count'] }} due</span>
-                            @else
+                            <?php if($deck['due_count'] > 0): ?>
+                                <span class="dash-badge dash-badge--due"><?php echo e($deck['due_count']); ?> due</span>
+                            <?php else: ?>
                                 <span class="dash-badge dash-badge--ok">
                                     <span class="material-symbols-outlined">check</span>On track
                                 </span>
-                            @endif
+                            <?php endif; ?>
                         </div>
                         <button class="dash-deck__del" type="button"
-                                data-delete-deck-button data-deck-name="{{ $deck['name'] }}"
+                                data-delete-deck-button data-deck-name="<?php echo e($deck['name']); ?>"
                                 aria-label="Delete deck">
                             <span class="material-symbols-outlined">delete</span>
                         </button>
                     </div>
 
-                    <h3 class="dash-deck__title">{{ $deck['name'] }}</h3>
-                    <p class="dash-deck__desc">{{ $deck['description'] ?: 'No description provided.' }}</p>
+                    <h3 class="dash-deck__title"><?php echo e($deck['name']); ?></h3>
+                    <p class="dash-deck__desc"><?php echo e($deck['description'] ?: 'No description provided.'); ?></p>
 
                     <div class="dash-deck__progress">
                         <div class="dash-deck__progress-meta">
-                            <span>{{ $deck['learned_count'] }} learned</span>
-                            <span>{{ $deck['mastery_percent'] }}%</span>
+                            <span><?php echo e($deck['learned_count']); ?> learned</span>
+                            <span><?php echo e($deck['mastery_percent']); ?>%</span>
                         </div>
                         <div class="dash-deck__progress-track">
-                            <div class="dash-deck__progress-fill" style="width:{{ $deck['mastery_percent'] }}%"></div>
+                            <div class="dash-deck__progress-fill" style="width:<?php echo e($deck['mastery_percent']); ?>%"></div>
                         </div>
                     </div>
 
                     <div class="dash-deck__actions">
-                        <a href="{{ route('decks.show', ['deck' => $deck['id']]) }}"
+                        <a href="<?php echo e(route('decks.show', ['deck' => $deck['id']])); ?>"
                            class="dash-deck__action-secondary">Manage</a>
-                        <a href="{{ route('study.typing', ['deck_id' => $deck['id'], 'mode' => 'typing']) }}"
+                        <a href="<?php echo e(route('study.typing', ['deck_id' => $deck['id'], 'mode' => 'typing'])); ?>"
                            class="dash-deck__action-primary">
                             <span class="material-symbols-outlined">play_arrow</span>
-                            Review {{ $deck['due_count'] > 0 ? $deck['due_count'].' cards' : 'Deck' }}
+                            Review <?php echo e($deck['due_count'] > 0 ? $deck['due_count'].' cards' : 'Deck'); ?>
+
                         </a>
                     </div>
 
                 </article>
-            @empty
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="dash-empty">
                     <span class="material-symbols-outlined dash-empty__icon">layers</span>
                     <h3 class="dash-empty__title">No decks yet</h3>
@@ -151,10 +150,10 @@
                         <span class="material-symbols-outlined">add</span>Create First Deck
                     </button>
                 </div>
-            @endforelse
+            <?php endif; ?>
         </div>
 
-        {{-- ── Delete deck modal ────────────────────────────── --}}
+        
         <dialog id="delete-deck-modal" class="custom-modal">
             <form method="dialog" class="custom-modal__form" data-delete-deck-form>
                 <div class="custom-modal__header">
@@ -189,43 +188,47 @@
             </form>
         </dialog>
 
-        {{-- ── Recent Imports ────────────────────────────────── --}}
+        
         <div class="dash-section-hd">
             <div>
                 <h2 class="dash-section-hd__title">Recent Imports</h2>
                 <p class="dash-section-hd__sub">Audit trail for the latest import results.</p>
             </div>
-            <a href="{{ route('imports.index') }}" class="dash-btn">
+            <a href="<?php echo e(route('imports.index')); ?>" class="dash-btn">
                 <span class="material-symbols-outlined">upload_file</span>New Import
             </a>
         </div>
 
         <div class="dash-imports">
-            @forelse ($recentImports as $job)
+            <?php $__empty_1 = true; $__currentLoopData = $recentImports; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $job): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <div class="dash-import-row">
-                    <span class="dash-import-row__id">#{{ $job['id'] }}</span>
+                    <span class="dash-import-row__id">#<?php echo e($job['id']); ?></span>
                     <span class="dash-import-row__file">
                         <span class="material-symbols-outlined">description</span>
-                        {{ $job['file_name'] }}
+                        <?php echo e($job['file_name']); ?>
+
                     </span>
-                    <span class="dash-import-row__deck">{{ $job['deck_name'] }}</span>
-                    <span class="dash-import-badge {{ $job['status'] === 'imported' ? 'dash-import-badge--ok' : 'dash-import-badge--warn' }}">
-                        {{ $job['status'] }}
+                    <span class="dash-import-row__deck"><?php echo e($job['deck_name']); ?></span>
+                    <span class="dash-import-badge <?php echo e($job['status'] === 'imported' ? 'dash-import-badge--ok' : 'dash-import-badge--warn'); ?>">
+                        <?php echo e($job['status']); ?>
+
                     </span>
                     <span class="dash-import-row__nums">
-                        <span class="dash-import-row__num dash-import-row__num--ok">↑{{ $job['success_rows'] }}</span>
-                        <span class="dash-import-row__num">↓{{ $job['failed_rows'] }}</span>
+                        <span class="dash-import-row__num dash-import-row__num--ok">↑<?php echo e($job['success_rows']); ?></span>
+                        <span class="dash-import-row__num">↓<?php echo e($job['failed_rows']); ?></span>
                     </span>
-                    <span class="dash-import-row__time">{{ $job['finished_at'] }}</span>
+                    <span class="dash-import-row__time"><?php echo e($job['finished_at']); ?></span>
                 </div>
-            @empty
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="dash-imports__empty">
                     <span class="material-symbols-outlined">upload_file</span>
                     No imports yet —
-                    <a href="{{ route('imports.index') }}">run one now</a>
+                    <a href="<?php echo e(route('imports.index')); ?>">run one now</a>
                 </div>
-            @endforelse
+            <?php endif; ?>
         </div>
 
     </section>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\playwright-automation\resources\views/screens/dashboard.blade.php ENDPATH**/ ?>

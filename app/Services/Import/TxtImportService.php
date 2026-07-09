@@ -74,7 +74,7 @@ class TxtImportService
         ];
     }
 
-    public function confirm(User $user, ImportJob $importJob): array
+    public function confirm(User $user, ImportJob $importJob, bool $swapFrontBack = false): array
     {
         if ((int) $importJob->user_id !== (int) $user->id) {
             throw new InvalidArgumentException('Import job does not belong to the given user.');
@@ -97,7 +97,7 @@ class TxtImportService
             ];
         }
 
-        $result = DB::transaction(function () use ($user, $importJob): array {
+        $result = DB::transaction(function () use ($user, $importJob, $swapFrontBack): array {
             // FIX 1: Pre-load all existing notes ONCE into a hash set for O(1) lookup.
             // Old code called Note::query()->get() on every single row — catastrophic N+1.
             $existingNoteKeys = DB::table('notes')
@@ -127,8 +127,8 @@ class TxtImportService
                     continue;
                 }
 
-                $frontText = $row->parsed_front ?? '';
-                $backText  = $row->parsed_back  ?? '';
+                $frontText = $swapFrontBack ? ($row->parsed_back ?? '') : ($row->parsed_front ?? '');
+                $backText  = $swapFrontBack ? ($row->parsed_front ?? '') : ($row->parsed_back ?? '');
 
                 $key = $this->parser->normalizeForDuplicate($frontText) . '||' .
                        $this->parser->normalizeForDuplicate($backText);

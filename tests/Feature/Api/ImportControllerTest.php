@@ -106,4 +106,33 @@ class ImportControllerTest extends TestCase
         $repeatConfirmResponse->assertOk();
         $this->assertGreaterThan(0, $repeatConfirmResponse->json('skipped_rows'));
     }
+
+    public function test_confirm_txt_import_can_swap_front_and_back(): void
+    {
+        $file = UploadedFile::fake()->createWithContent('swap-test.txt', "Front A\tBack A\n");
+
+        $previewResponse = $this->postJson('/api/imports/txt/preview', [
+            'user_id' => 1,
+            'deck_id' => 1,
+            'file' => $file,
+        ]);
+
+        $previewResponse->assertOk();
+
+        $confirmResponse = $this->postJson('/api/imports/txt/confirm', [
+            'user_id' => 1,
+            'import_job_id' => $previewResponse->json('import_job_id'),
+            'swap_front_back' => true,
+        ]);
+
+        $confirmResponse->assertOk();
+
+        $note = Note::query()
+            ->where('user_id', 1)
+            ->where('front_text', 'Back A')
+            ->where('back_text', 'Front A')
+            ->first();
+
+        $this->assertNotNull($note);
+    }
 }
