@@ -1,7 +1,7 @@
 @extends('layouts.app', ['page' => 'deck-detail'])
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/deck-detail.css') }}?v=20260705">
+    <link rel="stylesheet" href="{{ asset('css/deck-detail.css') }}?v=20260709">
 @endpush
 
 @section('content')
@@ -226,7 +226,7 @@
         <table class="dd-table">
             <thead>
                 <tr>
-                    <th class="dd-table__col-check"><input type="checkbox" aria-label="Select all cards" data-select-all-checkbox></th>
+                    <th class="dd-table__col-check"><input class="dd-check" type="checkbox" aria-label="Select all cards" data-select-all-checkbox></th>
                     <th class="dd-table__col-front">Front</th>
                     <th class="dd-table__col-back">Back</th>
                     <th class="dd-table__col-status">Status</th>
@@ -239,16 +239,22 @@
             <tbody>
                 @forelse ($cards as $card)
                     <tr class="dd-table__row" data-card-row data-card-id="{{ $card->id }}">
-                        <td class="dd-table__col-check">
-                            <input type="checkbox" aria-label="Select card" data-row-checkbox value="{{ $card->id }}">
+                        <td class="dd-table__col-check" data-label="Select">
+                            <input class="dd-check" type="checkbox" aria-label="Select card" data-row-checkbox value="{{ $card->id }}">
                         </td>
-                        <td class="dd-table__col-front">
-                            <span class="dd-table__front-text">{{ \Illuminate\Support\Str::limit($card->note->front_plain_text ?? $card->note->front_text, 60) }}</span>
+                        <td class="dd-table__col-front" data-label="Front">
+                            <div class="dd-card-cell dd-card-cell--front">
+                                <span class="dd-card-cell__icon material-symbols-outlined" aria-hidden="true">quiz</span>
+                                <span class="dd-table__front-text">{{ \Illuminate\Support\Str::limit($card->note->front_plain_text ?? $card->note->front_text, 72) }}</span>
+                            </div>
                         </td>
-                        <td class="dd-table__col-back">
-                            <span class="dd-table__back-text">{{ \Illuminate\Support\Str::limit($card->note->back_plain_text ?? '', 50) }}</span>
+                        <td class="dd-table__col-back" data-label="Back">
+                            <div class="dd-card-cell">
+                                <span class="dd-card-cell__icon dd-card-cell__icon--answer material-symbols-outlined" aria-hidden="true">tips_and_updates</span>
+                                <span class="dd-table__back-text">{{ \Illuminate\Support\Str::limit($card->note->back_plain_text ?? '', 64) }}</span>
+                            </div>
                         </td>
-                        <td class="dd-table__col-status">
+                        <td class="dd-table__col-status" data-label="Status">
                             @if($card->state === 'review')
                                 <span class="dd-badge dd-badge--review"><span class="dd-badge__dot"></span>Review</span>
                             @elseif($card->state === 'learning' || $card->state === 'relearning')
@@ -257,10 +263,13 @@
                                 <span class="dd-badge dd-badge--new"><span class="dd-badge__dot"></span>New</span>
                             @endif
                         </td>
-                        <td class="dd-table__col-reviewed">
-                            <span class="dd-table__muted">{{ $card->last_reviewed_at?->diffForHumans() ?? 'Never' }}</span>
+                        <td class="dd-table__col-reviewed" data-label="Last Reviewed">
+                            <span class="dd-table__meta">
+                                <span class="material-symbols-outlined" aria-hidden="true">history</span>
+                                <span>{{ $card->last_reviewed_at?->diffForHumans() ?? 'Never' }}</span>
+                            </span>
                         </td>
-                        <td class="dd-table__col-mastery">
+                        <td class="dd-table__col-mastery" data-label="Mastery">
                             @php
                                 $masteryPercent = $card->state === 'review' ? min(100, (int) round($card->stability * 10)) : ($card->state === 'new' ? 0 : 20);
                             @endphp
@@ -271,9 +280,12 @@
                                 <span class="dd-mastery__label">{{ $masteryPercent }}%</span>
                             </div>
                         </td>
-                        <td class="dd-table__col-next">
+                        <td class="dd-table__col-next" data-label="Next Due">
                             @if(!$card->due_at)
-                                <span class="dd-table__muted">-</span>
+                                <span class="dd-table__meta">
+                                    <span class="material-symbols-outlined" aria-hidden="true">event_busy</span>
+                                    <span>-</span>
+                                </span>
                             @else
                                 @php
                                     $now = now();
@@ -295,7 +307,7 @@
                                 @endif
                             @endif
                         </td>
-                        <td class="dd-table__col-actions">
+                        <td class="dd-table__col-actions" data-label="Actions">
                             <div class="dd-table__actions">
                                 <button class="dd-icon-btn dd-icon-btn--edit" type="button" data-edit-card-button data-card-front="{{ e($card->note->front_text ?? $card->note->front_plain_text ?? '') }}" data-card-back="{{ e($card->note->back_text ?? $card->note->back_plain_text ?? '') }}" aria-label="Edit card" title="Edit">
                                     <span class="material-symbols-outlined">edit</span>

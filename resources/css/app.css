@@ -5276,6 +5276,8 @@ a.sidebar__user {
 
 .dd-table-wrap {
     max-height: calc(100vh - 13rem);
+    scrollbar-color: rgba(100, 116, 139, 0.42) transparent;
+    scrollbar-width: thin;
 }
 
 .dd-table-head {
@@ -5289,11 +5291,87 @@ a.sidebar__user {
     top: 4.05rem;
     z-index: 1;
     background: #f8fafc;
+    border-bottom-color: rgba(148, 163, 184, 0.3);
 }
 
 .dd-table__row:has([data-row-checkbox]:checked) {
     background: rgba(0, 74, 198, 0.055);
     box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.dd-table tbody tr:nth-child(even):not(:has([data-row-checkbox]:checked)) {
+    background: rgba(248, 250, 252, 0.5);
+}
+
+.dd-table tbody tr:hover td {
+    background: rgba(0, 74, 198, 0.04);
+}
+
+.dd-table th,
+.dd-table td {
+    height: 4.15rem;
+}
+
+.dd-table__col-front {
+    width: 31%;
+}
+
+.dd-table__col-back {
+    width: 25%;
+}
+
+.dd-table__col-check {
+    width: 3.25rem;
+}
+
+.dd-table__col-actions {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    width: 5.9rem;
+    background: inherit;
+    box-shadow: -10px 0 18px rgba(255, 255, 255, 0.82);
+}
+
+.dd-table th.dd-table__col-actions {
+    z-index: 2;
+    background: #f8fafc;
+}
+
+.dd-check {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+.dd-card-cell {
+    display: grid;
+    grid-template-columns: 1.9rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.dd-card-cell__icon {
+    display: grid;
+    place-items: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 0.55rem;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+.dd-card-cell__icon--answer {
+    background: var(--secondary-soft);
+    color: var(--secondary);
+}
+
+.dd-card-cell--front .dd-table__front-text {
+    color: var(--text);
+    font-weight: 750;
 }
 
 .dd-table__front-text,
@@ -5306,14 +5384,59 @@ a.sidebar__user {
     white-space: nowrap;
 }
 
+.dd-table__meta,
+.dd-due {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    min-height: 1.85rem;
+    padding: 0.28rem 0.55rem;
+    border-radius: 999px;
+    background: var(--surface-low);
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+.dd-table__meta .material-symbols-outlined {
+    font-size: 0.95rem;
+}
+
+.dd-due {
+    color: var(--secondary);
+    background: var(--secondary-soft);
+}
+
+.dd-due--overdue {
+    color: var(--danger);
+    background: var(--danger-soft);
+}
+
+.dd-due--soon {
+    color: var(--warning);
+    background: var(--warning-soft);
+}
+
+.dd-table__actions {
+    padding-inline: 0.15rem;
+}
+
+.dd-table__actions .dd-icon-btn {
+    background: var(--surface);
+    border-color: rgba(148, 163, 184, 0.22);
+}
+
 @media (max-width: 1024px) {
     .dd-table-wrap {
         max-height: none;
     }
 
     .dd-table-head,
-    .dd-table th {
+    .dd-table th,
+    .dd-table__col-actions {
         position: static;
+        box-shadow: none;
     }
 }
 
@@ -5328,6 +5451,19 @@ a.sidebar__user {
     .dd-toolbar__filters .dd-toolbar__select,
     .dd-toolbar__filters .dd-btn {
         flex: 1;
+    }
+
+    .dd-table {
+        min-width: 720px;
+    }
+
+    .dd-card-cell {
+        grid-template-columns: 1.7rem minmax(0, 1fr);
+    }
+
+    .dd-card-cell__icon {
+        width: 1.7rem;
+        height: 1.7rem;
     }
 }
 
