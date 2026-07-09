@@ -66,7 +66,7 @@
             </div>
         </div>
         <div class="dd-hero__actions">
-            <a href="<?php echo e(route('study.front', ['deck_id' => $deck->id])); ?>" class="dd-btn dd-btn--study">
+            <a href="<?php echo e(route('study.typing', ['deck_id' => $deck->id, 'mode' => 'typing'])); ?>" class="dd-btn dd-btn--study">
                 <span class="material-symbols-outlined">school</span>
                 <span>Study Now</span>
             </a>

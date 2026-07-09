@@ -19,7 +19,7 @@
                 <p class="dash-greeting__sub">Track your streak, review due cards, and manage your decks.</p>
             </div>
             <div class="dash-greeting__actions">
-                <a href="{{ route('study.front', $firstDeck ? ['deck_id' => $firstDeck['id']] : []) }}"
+                <a href="{{ route('study.typing', $firstDeck ? ['deck_id' => $firstDeck['id'], 'mode' => 'typing'] : ['mode' => 'typing']) }}"
                    class="dash-btn dash-btn--primary">
                     <span class="material-symbols-outlined">school</span>
                     Study Now
@@ -134,7 +134,7 @@
                     <div class="dash-deck__actions">
                         <a href="{{ route('decks.show', ['deck' => $deck['id']]) }}"
                            class="dash-deck__action-secondary">Manage</a>
-                        <a href="{{ route('study.front', ['deck_id' => $deck['id']]) }}"
+                        <a href="{{ route('study.typing', ['deck_id' => $deck['id'], 'mode' => 'typing']) }}"
                            class="dash-deck__action-primary">
                             <span class="material-symbols-outlined">play_arrow</span>
                             Review {{ $deck['due_count'] > 0 ? $deck['due_count'].' cards' : 'Deck' }}

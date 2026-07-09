@@ -54,10 +54,11 @@
                         <div class="deck-select-wrap" data-deck-select-wrap>
                             {{-- Hidden native select — JS reads options + dispatches events here --}}
                             <select class="import-select" data-import-deck-select style="display:none">
+                                <option value="" disabled @selected(($importSelectedDeckId ?? null) === null)>Select a deck...</option>
                                 @forelse ($importDecks as $deck)
                                     <option value="{{ $deck->id }}" @selected(($importSelectedDeckId ?? null) === $deck->id)>{{ $deck->name }}</option>
                                 @empty
-                                    <option value="" disabled selected>No deck available</option>
+                                    <option value="" disabled>No deck available</option>
                                 @endforelse
                                 <option value="NEW_DECK">+ Create New Deck...</option>
                             </select>
@@ -166,16 +167,22 @@
                     <p class="import-card-section-head__sub">Rows grouped by status — invalid rows are skipped automatically on confirm.</p>
                 </div>
 
-                <div class="import-tabs">
-                    <button class="import-tab is-mode-active" type="button" data-import-filter="all">All</button>
-                    <button class="import-tab" type="button" data-import-filter="valid">
-                        <span class="import-tab__dot import-tab__dot--valid"></span>Valid
-                    </button>
-                    <button class="import-tab" type="button" data-import-filter="warning">
-                        <span class="import-tab__dot import-tab__dot--warning"></span>Warnings
-                    </button>
-                    <button class="import-tab" type="button" data-import-filter="invalid">
-                        <span class="import-tab__dot import-tab__dot--invalid"></span>Errors
+                <div class="import-preview-toolbar">
+                    <div class="import-tabs">
+                        <button class="import-tab is-mode-active" type="button" data-import-filter="all">All</button>
+                        <button class="import-tab" type="button" data-import-filter="valid">
+                            <span class="import-tab__dot import-tab__dot--valid"></span>Valid
+                        </button>
+                        <button class="import-tab" type="button" data-import-filter="warning">
+                            <span class="import-tab__dot import-tab__dot--warning"></span>Warnings
+                        </button>
+                        <button class="import-tab" type="button" data-import-filter="invalid">
+                            <span class="import-tab__dot import-tab__dot--invalid"></span>Errors
+                        </button>
+                    </div>
+                    <button class="import-swap-btn" type="button" data-import-swap-button aria-pressed="false">
+                        <span class="material-symbols-outlined">swap_horiz</span>
+                        <span>Swap Front/Back</span>
                     </button>
                 </div>
 
@@ -184,8 +191,8 @@
                         <thead>
                             <tr>
                                 <th class="import-table__col-num">#</th>
-                                <th>Front</th>
-                                <th>Back</th>
+                                <th data-import-front-heading>Front</th>
+                                <th data-import-back-heading>Back</th>
                                 <th class="import-table__col-status">Status</th>
                                 <th>Issues</th>
                             </tr>

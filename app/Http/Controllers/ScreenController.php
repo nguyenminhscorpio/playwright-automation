@@ -115,7 +115,21 @@ class ScreenController extends Controller
 
     public function imports(Request $request): View
     {
-        [$user, $decks, $selectedDeck] = $this->resolveStudyContext($request);
+        $user = auth()->user();
+        $deckId = $request->integer('deck_id');
+        $decks = collect();
+        $selectedDeck = null;
+
+        if ($user !== null) {
+            $decks = Deck::query()
+                ->where('user_id', $user->id)
+                ->orderBy('id')
+                ->get(['id', 'name', 'description']);
+
+            if ($deckId > 0) {
+                $selectedDeck = $decks->firstWhere('id', $deckId);
+            }
+        }
 
         return view('screens.imports', [
             'title' => 'FlashMind - Import TXT',

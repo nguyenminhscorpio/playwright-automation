@@ -1231,8 +1231,10 @@ a.sidebar__user {
 
 .study-judgement {
     display: flex;
-    align-items: center;
-    gap: 0.65rem;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .study-judgement[data-result="correct"] {
@@ -1248,6 +1250,70 @@ a.sidebar__user {
 .study-judgement[data-result="incorrect"] {
     color: var(--danger);
     background: var(--danger-soft);
+}
+
+.answer-score {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 5rem;
+}
+
+.answer-score strong {
+    font-family: "Lexend", ui-sans-serif, sans-serif;
+    font-size: 1.55rem;
+    line-height: 1;
+}
+
+.answer-score span {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.answer-diff {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: min(100%, 16rem);
+    padding: 0.35rem 0.5rem;
+    overflow-x: auto;
+}
+
+.answer-diff__line {
+    max-width: 100%;
+    white-space: pre-wrap;
+    word-break: break-word;
+    text-align: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
+.answer-diff__arrow {
+    color: var(--muted);
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.answer-diff .is-correct {
+    color: var(--secondary);
+}
+
+.answer-diff .is-wrong {
+    color: var(--danger);
+}
+
+.answer-diff .is-expected {
+    color: var(--primary);
+}
+
+.answer-diff .is-missing {
+    color: var(--danger);
+    opacity: 0.75;
 }
 
 .study-actions--center {
@@ -2013,6 +2079,14 @@ a.sidebar__user {
     flex-wrap: wrap;
 }
 
+.import-preview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
 .import-tab {
     display: inline-flex;
     align-items: center;
@@ -2059,6 +2133,36 @@ a.sidebar__user {
 }
 .import-tab__dot--invalid {
     background: var(--danger);
+}
+
+.import-swap-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.5rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    border: 1.5px solid rgba(0, 74, 198, 0.18);
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 0.86rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.import-swap-btn .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+.import-swap-btn:hover,
+.import-swap-btn.is-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
 }
 
 .import-table-wrap {
@@ -4021,6 +4125,30 @@ a.sidebar__user {
     display: flex;
     align-items: center;
     gap: 0.25rem;
+}
+
+.dd-pagination__controls a {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--surface-stroke) !important;
+}
+
+.dd-pagination__controls a:hover {
+    background-color: var(--primary-soft) !important;
+    color: var(--primary) !important;
+}
+
+.dd-pagination__controls span[aria-current] > span {
+    background-color: var(--primary) !important;
+    color: #fff !important;
+    border-color: var(--primary) !important;
+}
+
+.dd-pagination__controls span[aria-disabled="true"] > span,
+.dd-pagination__controls span:not([aria-current]):not([aria-disabled]) > span {
+    background-color: var(--surface-low) !important;
+    color: var(--muted) !important;
+    border-color: var(--surface-stroke) !important;
 }
 
 /* ── Modal ───────────────────────────────────────────── */

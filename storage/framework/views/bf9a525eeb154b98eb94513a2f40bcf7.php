@@ -33,21 +33,21 @@
                 ->map(fn($w) => strtoupper(substr($w, 0, 1)))
                 ->take(2)->implode('');
             $isStudyPage = request()->routeIs('study.*');
-            $studyMode = request('mode', 'flip');
             $studyRouteVersion = 'study-v2';
             $studyDeckQuery = array_filter([
                 'deck_id' => request('deck_id'),
                 'sv' => $studyRouteVersion,
             ], fn ($value) => $value !== null && $value !== '');
             $currentStudyScreen = $studyScreen ?? 'front';
+            $studyMode = request('mode', $currentStudyScreen === 'typing' ? 'typing' : 'flip');
             $flipModeUrl = match ($currentStudyScreen) {
                 'typing' => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
-                'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'flip']),
+                'answer' => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
                 default => route('study.front', [...$studyDeckQuery, 'mode' => 'flip']),
             };
             $typingModeUrl = match ($currentStudyScreen) {
                 'typing' => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
-                'answer' => route('study.answer', [...$studyDeckQuery, 'mode' => 'typing']),
+                'answer' => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
                 default => route('study.typing', [...$studyDeckQuery, 'mode' => 'typing']),
             };
         ?>
@@ -97,7 +97,7 @@
                         <div class="nav__icon"><span class="material-symbols-outlined">layers</span></div>
                         <span>My Decks</span>
                     </a>
-                    <a href="<?php echo e(route('study.front', ['sv' => $studyRouteVersion])); ?>" class="nav__link <?php echo e(request()->routeIs('study.*') ? 'is-active' : ''); ?>">
+                    <a href="<?php echo e(route('study.typing', ['mode' => 'typing', 'sv' => $studyRouteVersion])); ?>" class="nav__link <?php echo e(request()->routeIs('study.*') ? 'is-active' : ''); ?>">
                         <div class="nav__icon"><span class="material-symbols-outlined">school</span></div>
                         <span>Study Session</span>
                     </a>

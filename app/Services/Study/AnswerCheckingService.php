@@ -10,6 +10,7 @@ class AnswerCheckingService
         $normalizedCorrectAnswer = $this->normalize($correctAnswer);
 
         if ($normalizedUserAnswer === $normalizedCorrectAnswer) {
+            $similarityPercent = 100.0;
             $result = 'correct';
         } else {
             similar_text($normalizedUserAnswer, $normalizedCorrectAnswer, $similarityPercent);
@@ -20,6 +21,7 @@ class AnswerCheckingService
             'correct_answer' => $correctAnswer,
             'user_answer' => $userAnswer,
             'normalized_user_answer' => $normalizedUserAnswer,
+            'similarity_percent' => round($similarityPercent, 1),
             'result' => $result,
         ];
     }
