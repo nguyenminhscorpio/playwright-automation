@@ -594,8 +594,12 @@ const setupImport = () => {
     const progressPct = app.querySelector("[data-import-progress-pct]");
     const progressBar = app.querySelector("[data-import-progress-bar]");
     const swapButton = app.querySelector("[data-import-swap-button]");
+    const swapLabel = app.querySelector("[data-import-swap-label]");
     const frontHeading = app.querySelector("[data-import-front-heading]");
     const backHeading = app.querySelector("[data-import-back-heading]");
+    const mapState = app.querySelector("[data-import-map-state]");
+    const mapFront = app.querySelector("[data-import-map-front]");
+    const mapBack = app.querySelector("[data-import-map-back]");
     const filterButtons = app.querySelectorAll("[data-import-filter]");
     const tabCounts = app.querySelectorAll("[data-import-tab-count]");
 
@@ -746,12 +750,11 @@ const setupImport = () => {
         );
 
     const previewText = (row, side) => {
-        const sourceSide =
-            swapFrontBack && row.status !== "invalid"
-                ? side === "front"
-                    ? "back"
-                    : "front"
-                : side;
+        const sourceSide = swapFrontBack
+            ? side === "front"
+                ? "back"
+                : "front"
+            : side;
 
         return (row.data?.[`${sourceSide}_text`] || "").slice(0, 140);
     };
@@ -759,7 +762,26 @@ const setupImport = () => {
     const updateSwapUi = () => {
         if (frontHeading) frontHeading.textContent = swapFrontBack ? "Back" : "Front";
         if (backHeading) backHeading.textContent = swapFrontBack ? "Front" : "Back";
+        if (swapLabel) {
+            swapLabel.textContent = swapFrontBack
+                ? "Restore Front/Back"
+                : "Swap Front/Back";
+        }
+        if (mapState) {
+            mapState.textContent = swapFrontBack
+                ? "Swapped mapping"
+                : "Original mapping";
+            mapState.classList.toggle("is-swapped", swapFrontBack);
+        }
+        if (mapFront) {
+            mapFront.textContent = swapFrontBack ? "Back column" : "Front column";
+        }
+        if (mapBack) {
+            mapBack.textContent = swapFrontBack ? "Front column" : "Back column";
+        }
         if (swapButton) {
+            const canSwap = importJobId !== null && !confirmed && rows.length > 0;
+            swapButton.disabled = !canSwap;
             swapButton.classList.toggle("is-active", swapFrontBack);
             swapButton.setAttribute("aria-pressed", String(swapFrontBack));
         }
@@ -821,16 +843,24 @@ const setupImport = () => {
                           : "red";
                 const issues =
                     [...(row.errors || []), ...(row.warnings || [])]
-                        .map((i) => escapeHtml(i.message))
+                        .map((i) => {
+                            const message = typeof i === "string" ? i : i.message;
+                            return `<span class="import-issue-item">${escapeHtml(message || "Review this row.")}</span>`;
+                        })
                         .join("<br>") || "—";
                 const front = previewText(row, "front");
                 const back = previewText(row, "back");
+                const hasIssues =
+                    (row.errors || []).length + (row.warnings || []).length > 0;
+                const issueDisplay = hasIssues
+                    ? issues
+                    : '<span class="import-issue-empty"><span class="material-symbols-outlined">check_circle</span>Ready to import</span>';
                 return `<tr data-row-kind="${kind}">
-                <td class="import-table__col-num" style="color:var(--muted);font-size:0.85rem">${row.index}</td>
-                <td>${escapeHtml(front)}</td>
-                <td>${escapeHtml(back)}</td>
-                <td><span class="status-badge status-badge--${badge}">${kind}</span></td>
-                <td class="import-issue-copy">${issues}</td>
+                <td class="import-table__col-num"><span class="import-row-index">${row.index}</span></td>
+                <td><div class="import-preview-cell"><span class="import-preview-cell__label">${swapFrontBack ? "Back source" : "Front source"}</span><span class="import-preview-cell__text">${escapeHtml(front) || '<span class="import-preview-cell__empty">Empty</span>'}</span></div></td>
+                <td><div class="import-preview-cell"><span class="import-preview-cell__label">${swapFrontBack ? "Front source" : "Back source"}</span><span class="import-preview-cell__text">${escapeHtml(back) || '<span class="import-preview-cell__empty">Empty</span>'}</span></div></td>
+                <td><div class="import-row-status"><span class="status-badge status-badge--${badge}">${kind}</span><span>${kind === "valid" ? "Ready" : kind === "warning" ? "Needs review" : "Skipped"}</span></div></td>
+                <td class="import-issue-copy">${issueDisplay}</td>
             </tr>`;
             })
             .join("");
@@ -846,6 +876,7 @@ const setupImport = () => {
 
     // ── Preview ──────────────────────────────────────────────
     swapButton?.addEventListener("click", () => {
+        if (swapButton.disabled) return;
         swapFrontBack = !swapFrontBack;
         if (importJobId && !confirmed) confirmButton.disabled = false;
         renderRows();
@@ -978,6 +1009,7 @@ const setupImport = () => {
                 "success",
             );
             setStep(3);
+            updateSwapUi();
             deckSelect.value = "";
             deckSelect.dispatchEvent(new Event("change", { bubbles: true }));
             confirmButton.innerHTML =

@@ -194,10 +194,24 @@
                             <span class="import-tab__count" data-import-tab-count="invalid">0</span>
                         </button>
                     </div>
-                    <button class="import-swap-btn" type="button" data-import-swap-button aria-pressed="false">
+                    <button class="import-swap-btn" type="button" data-import-swap-button aria-pressed="false" disabled>
                         <span class="material-symbols-outlined">swap_horiz</span>
-                        <span>Swap Front/Back</span>
+                        <span data-import-swap-label>Swap Front/Back</span>
                     </button>
+                </div>
+
+                <div class="import-preview-map" data-import-preview-map>
+                    <span class="import-preview-map__state" data-import-map-state>Original mapping</span>
+                    <span class="import-preview-map__item">
+                        <span data-import-map-front>Front column</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                        <strong>Card front</strong>
+                    </span>
+                    <span class="import-preview-map__item">
+                        <span data-import-map-back>Back column</span>
+                        <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+                        <strong>Card back</strong>
+                    </span>
                 </div>
 
                 <div class="import-table-wrap">
