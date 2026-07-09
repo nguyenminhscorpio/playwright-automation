@@ -11,20 +11,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lexend:wght@500;600;700;800&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400" rel="stylesheet">
 
-        <?php
-            $manifestPath = public_path('build/manifest.json');
-            $manifest = file_exists($manifestPath)
-                ? json_decode(file_get_contents($manifestPath), true)
-                : [];
-            $cssFile = $manifest['resources/css/app.css']['file'] ?? '';
-            $jsFile  = $manifest['resources/js/app.js']['file'] ?? '';
-        ?>
-        <?php if($cssFile): ?>
-            <link rel="stylesheet" href="<?php echo e(asset('build/' . $cssFile)); ?>" />
-        <?php endif; ?>
-        <?php if($jsFile): ?>
-            <script type="module" src="<?php echo e(asset('build/' . $jsFile)); ?>"></script>
-        <?php endif; ?>
+        <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
+        <?php echo $__env->yieldPushContent('styles'); ?>
 
         <?php
             $authUser     = auth()->user();
@@ -203,4 +191,4 @@
         </dialog>
     </body>
 </html>
-<?php /**PATH C:\laragon\www\playwright-automation\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\admin\Documents\mine\vibe-coding\resources\views/layouts/app.blade.php ENDPATH**/ ?>
