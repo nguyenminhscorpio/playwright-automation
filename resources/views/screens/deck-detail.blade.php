@@ -41,8 +41,10 @@
     </section>
 </div>
 @else
-@php($activeSearch = trim($filters['q'] ?? ''))
-@php($activeStatus = $filters['status'] ?? 'all')
+@php
+    $activeSearch = trim($filters['q'] ?? '');
+    $activeStatus = $filters['status'] ?? 'all';
+@endphp
 <div class="dd" data-deck-detail-app data-deck-id="{{ $deck->id }}" data-user-id="{{ $deckDetailUserId ?? '' }}" data-total-cards="{{ $cards->total() }}">
 
     {{-- ── Breadcrumb ─────────────────────────────────────── --}}
@@ -259,7 +261,9 @@
                             <span class="dd-table__muted">{{ $card->last_reviewed_at?->diffForHumans() ?? 'Never' }}</span>
                         </td>
                         <td class="dd-table__col-mastery">
-                            @php($masteryPercent = $card->state === 'review' ? min(100, (int) round($card->stability * 10)) : ($card->state === 'new' ? 0 : 20))
+                            @php
+                                $masteryPercent = $card->state === 'review' ? min(100, (int) round($card->stability * 10)) : ($card->state === 'new' ? 0 : 20);
+                            @endphp
                             <div class="dd-mastery" title="{{ $masteryPercent }}% mastery">
                                 <div class="dd-mastery__track">
                                     <div class="dd-mastery__fill dd-mastery__fill--{{ $masteryPercent >= 70 ? 'high' : ($masteryPercent >= 30 ? 'mid' : 'low') }}" style="width: {{ $masteryPercent }}%"></div>
@@ -271,12 +275,16 @@
                             @if(!$card->due_at)
                                 <span class="dd-table__muted">-</span>
                             @else
-                                @php($now = now())
-                                @php($diffDays = (int) $now->startOfDay()->diffInDays($card->due_at->startOfDay(), false))
+                                @php
+                                    $now = now();
+                                    $diffDays = (int) $now->startOfDay()->diffInDays($card->due_at->startOfDay(), false);
+                                @endphp
                                 @if($diffDays < 0 || ($diffDays == 0 && $card->due_at->isPast()))
                                     <span class="dd-due dd-due--overdue">Overdue</span>
                                 @elseif($diffDays == 0)
-                                    @php($diffMins = $now->diffInMinutes($card->due_at))
+                                    @php
+                                        $diffMins = $now->diffInMinutes($card->due_at);
+                                    @endphp
                                     @if($diffMins < 60)
                                         <span class="dd-due dd-due--soon">{{ $diffMins }}m</span>
                                     @else
@@ -335,6 +343,16 @@
 
     {{-- ── Pagination ─────────────────────────────────────── --}}
     @if($cards->hasPages())
+        @php
+            $currentPage = $cards->currentPage();
+            $lastPage = $cards->lastPage();
+            $pageWindow = collect([1, $lastPage, $currentPage - 1, $currentPage, $currentPage + 1])
+                ->filter(fn ($page) => $page >= 1 && $page <= $lastPage)
+                ->unique()
+                ->sort()
+                ->values();
+            $previousRenderedPage = null;
+        @endphp
         <footer class="dd-pagination" aria-label="Cards pagination">
             <div class="dd-pagination__info">
                 <span>Showing</span>
@@ -355,20 +373,20 @@
                 @endif
 
                 <div class="dd-page-list">
-                    @foreach($cards->onEachSide(1)->elements() as $element)
-                        @if(is_string($element))
-                            <span class="dd-page-btn dd-page-btn--ellipsis" aria-hidden="true">{{ $element }}</span>
+                    @foreach($pageWindow as $page)
+                        @if($previousRenderedPage !== null && $page > $previousRenderedPage + 1)
+                            <span class="dd-page-btn dd-page-btn--ellipsis" aria-hidden="true">...</span>
                         @endif
 
-                        @if(is_array($element))
-                            @foreach($element as $page => $url)
-                                @if($page == $cards->currentPage())
-                                    <span class="dd-page-btn is-active" aria-current="page">{{ $page }}</span>
-                                @else
-                                    <a class="dd-page-btn" href="{{ $url }}" aria-label="Go to page {{ $page }}">{{ $page }}</a>
-                                @endif
-                            @endforeach
+                        @if($page === $currentPage)
+                            <span class="dd-page-btn is-active" aria-current="page">{{ $page }}</span>
+                        @else
+                            <a class="dd-page-btn" href="{{ $cards->url($page) }}" aria-label="Go to page {{ $page }}">{{ $page }}</a>
                         @endif
+
+                        @php
+                            $previousRenderedPage = $page;
+                        @endphp
                     @endforeach
                 </div>
 

@@ -52,7 +52,7 @@ class ScreenController extends Controller
         ]);
     }
 
-    public function deckDetail(Request $request, string $deck, CardRepository $cardRepository): Response
+    public function deckDetail(Request $request, string $deck, CardRepository $cardRepository): View
     {
         [$user] = $this->resolveStudyContext($request);
 
