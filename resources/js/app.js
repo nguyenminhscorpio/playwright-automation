@@ -213,7 +213,6 @@ const setupDeckDetail = () => {
             title.textContent = "Create Card";
             feedback.classList.add("is-hidden");
             modal.showModal();
-            requestAnimationFrame(() => frontInput?.focus());
         },
     );
 
@@ -226,7 +225,6 @@ const setupDeckDetail = () => {
             title.textContent = "Edit Card";
             feedback.classList.add("is-hidden");
             modal.showModal();
-            requestAnimationFrame(() => frontInput?.focus());
         });
     });
 
@@ -282,7 +280,6 @@ const setupDeckDetail = () => {
         app.querySelectorAll("[data-row-checkbox]"),
     );
     const bulkDeleteBtn = app.querySelector("[data-action-bulk-delete]");
-    const bulkSelectedCount = app.querySelector("[data-bulk-selected-count]");
 
     const updateBulkActions = () => {
         if (!bulkDeleteBtn || rowCheckboxes.length === 0) return;
@@ -292,9 +289,6 @@ const setupDeckDetail = () => {
             : checkedCount;
 
         bulkDeleteBtn.classList.toggle("is-hidden", actualSelectedCount === 0);
-        if (bulkSelectedCount) {
-            bulkSelectedCount.textContent = String(actualSelectedCount);
-        }
 
         if (selectAllCheckbox) {
             if (isAllSelected) {
@@ -594,14 +588,8 @@ const setupImport = () => {
     const progressPct = app.querySelector("[data-import-progress-pct]");
     const progressBar = app.querySelector("[data-import-progress-bar]");
     const swapButton = app.querySelector("[data-import-swap-button]");
-    const swapLabel = app.querySelector("[data-import-swap-label]");
     const frontHeading = app.querySelector("[data-import-front-heading]");
     const backHeading = app.querySelector("[data-import-back-heading]");
-    const mapState = app.querySelector("[data-import-map-state]");
-    const mapFront = app.querySelector("[data-import-map-front]");
-    const mapBack = app.querySelector("[data-import-map-back]");
-    const filterButtons = app.querySelectorAll("[data-import-filter]");
-    const tabCounts = app.querySelectorAll("[data-import-tab-count]");
 
     let importJobId = null;
     let confirmed = false;
@@ -750,11 +738,12 @@ const setupImport = () => {
         );
 
     const previewText = (row, side) => {
-        const sourceSide = swapFrontBack
-            ? side === "front"
-                ? "back"
-                : "front"
-            : side;
+        const sourceSide =
+            swapFrontBack && row.status !== "invalid"
+                ? side === "front"
+                    ? "back"
+                    : "front"
+                : side;
 
         return (row.data?.[`${sourceSide}_text`] || "").slice(0, 140);
     };
@@ -762,60 +751,14 @@ const setupImport = () => {
     const updateSwapUi = () => {
         if (frontHeading) frontHeading.textContent = swapFrontBack ? "Back" : "Front";
         if (backHeading) backHeading.textContent = swapFrontBack ? "Front" : "Back";
-        if (swapLabel) {
-            swapLabel.textContent = swapFrontBack
-                ? "Restore Front/Back"
-                : "Swap Front/Back";
-        }
-        if (mapState) {
-            mapState.textContent = swapFrontBack
-                ? "Swapped mapping"
-                : "Original mapping";
-            mapState.classList.toggle("is-swapped", swapFrontBack);
-        }
-        if (mapFront) {
-            mapFront.textContent = swapFrontBack ? "Back column" : "Front column";
-        }
-        if (mapBack) {
-            mapBack.textContent = swapFrontBack ? "Front column" : "Back column";
-        }
         if (swapButton) {
-            const canSwap = importJobId !== null && !confirmed && rows.length > 0;
-            swapButton.disabled = !canSwap;
             swapButton.classList.toggle("is-active", swapFrontBack);
             swapButton.setAttribute("aria-pressed", String(swapFrontBack));
         }
     };
 
-    const updateTabCounts = () => {
-        const counts = rows.reduce(
-            (acc, row) => {
-                acc.all += 1;
-                acc[rowKind(row)] += 1;
-                return acc;
-            },
-            { all: 0, valid: 0, warning: 0, invalid: 0 },
-        );
-
-        tabCounts.forEach((countEl) => {
-            const key = countEl.dataset.importTabCount;
-            countEl.textContent = String(counts[key] ?? 0);
-        });
-    };
-
-    const setActiveFilter = (nextFilter) => {
-        filter = nextFilter || "all";
-        filterButtons.forEach((btn) =>
-            btn.classList.toggle(
-                "is-mode-active",
-                (btn.dataset.importFilter || "all") === filter,
-            ),
-        );
-    };
-
     const renderRows = () => {
         updateSwapUi();
-        updateTabCounts();
 
         const visible = rows.filter((row) =>
             filter === "all" ? true : rowKind(row) === filter,
@@ -823,11 +766,8 @@ const setupImport = () => {
 
         if (!visible.length) {
             rowsBody.innerHTML = `<tr><td colspan="5" class="import-table__empty">
-                <div class="import-table__empty-box">
-                    <span class="material-symbols-outlined">filter_list_off</span>
-                    <strong>No rows match this filter</strong>
-                    <p>Switch to another status, or run preview again after updating the source file.</p>
-                </div>
+                <span class="material-symbols-outlined">filter_list_off</span>
+                <p>No rows match this filter.</p>
             </td></tr>`;
             return;
         }
@@ -843,40 +783,35 @@ const setupImport = () => {
                           : "red";
                 const issues =
                     [...(row.errors || []), ...(row.warnings || [])]
-                        .map((i) => {
-                            const message = typeof i === "string" ? i : i.message;
-                            return `<span class="import-issue-item">${escapeHtml(message || "Review this row.")}</span>`;
-                        })
+                        .map((i) => i.message)
                         .join("<br>") || "—";
                 const front = previewText(row, "front");
                 const back = previewText(row, "back");
-                const hasIssues =
-                    (row.errors || []).length + (row.warnings || []).length > 0;
-                const issueDisplay = hasIssues
-                    ? issues
-                    : '<span class="import-issue-empty"><span class="material-symbols-outlined">check_circle</span>Ready to import</span>';
                 return `<tr data-row-kind="${kind}">
-                <td class="import-table__col-num"><span class="import-row-index">${row.index}</span></td>
-                <td><div class="import-preview-cell"><span class="import-preview-cell__label">${swapFrontBack ? "Back source" : "Front source"}</span><span class="import-preview-cell__text">${escapeHtml(front) || '<span class="import-preview-cell__empty">Empty</span>'}</span></div></td>
-                <td><div class="import-preview-cell"><span class="import-preview-cell__label">${swapFrontBack ? "Front source" : "Back source"}</span><span class="import-preview-cell__text">${escapeHtml(back) || '<span class="import-preview-cell__empty">Empty</span>'}</span></div></td>
-                <td><div class="import-row-status"><span class="status-badge status-badge--${badge}">${kind}</span><span>${kind === "valid" ? "Ready" : kind === "warning" ? "Needs review" : "Skipped"}</span></div></td>
-                <td class="import-issue-copy">${issueDisplay}</td>
+                <td class="import-table__col-num" style="color:var(--muted);font-size:0.85rem">${row.index}</td>
+                <td>${escapeHtml(front)}</td>
+                <td>${escapeHtml(back)}</td>
+                <td><span class="status-badge status-badge--${badge}">${kind}</span></td>
+                <td class="import-issue-copy">${issues}</td>
             </tr>`;
             })
             .join("");
     };
 
     // ── Filter tabs ──────────────────────────────────────────
-    filterButtons.forEach((btn) =>
+    app.querySelectorAll("[data-import-filter]").forEach((btn) =>
         btn.addEventListener("click", () => {
-            setActiveFilter(btn.dataset.importFilter || "all");
+            filter = btn.dataset.importFilter || "all";
+            app.querySelectorAll("[data-import-filter]").forEach((b) =>
+                b.classList.remove("is-mode-active"),
+            );
+            btn.classList.add("is-mode-active");
             renderRows();
         }),
     );
 
     // ── Preview ──────────────────────────────────────────────
     swapButton?.addEventListener("click", () => {
-        if (swapButton.disabled) return;
         swapFrontBack = !swapFrontBack;
         if (importJobId && !confirmed) confirmButton.disabled = false;
         renderRows();
@@ -930,7 +865,6 @@ const setupImport = () => {
             confirmed = false;
             rows = payload.rows || [];
             swapFrontBack = false;
-            setActiveFilter("all");
 
             fileMeta.textContent = `${payload.file_name} · ${payload.detected_format} · ${payload.data_lines} data rows`;
             document.querySelector("[data-import-summary-total]").textContent =
@@ -1009,7 +943,6 @@ const setupImport = () => {
                 "success",
             );
             setStep(3);
-            updateSwapUi();
             deckSelect.value = "";
             deckSelect.dispatchEvent(new Event("change", { bubbles: true }));
             confirmButton.innerHTML =

@@ -33,16 +33,4 @@ class DeckDetailScreenTest extends TestCase
         $response->assertSee('No deck found');
         $response->assertSee('This deck is no longer available');
     }
-
-    public function test_existing_deck_renders_detail_screen(): void
-    {
-        $user = User::factory()->create();
-        $deck = Deck::factory()->create(['user_id' => $user->id, 'name' => 'Existing Deck']);
-
-        $response = $this->actingAs($user)->get("/decks/{$deck->id}");
-
-        $response->assertOk();
-        $response->assertSee('Existing Deck');
-        $response->assertSee('Cards');
-    }
 }

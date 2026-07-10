@@ -52,11 +52,10 @@
                         <div class="deck-select-wrap" data-deck-select-wrap>
                             
                             <select class="import-select" data-import-deck-select style="display:none">
-                                <option value="" disabled <?php if(($importSelectedDeckId ?? null) === null): echo 'selected'; endif; ?>>Select a deck...</option>
                                 <?php $__empty_1 = true; $__currentLoopData = $importDecks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $deck): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                     <option value="<?php echo e($deck->id); ?>" <?php if(($importSelectedDeckId ?? null) === $deck->id): echo 'selected'; endif; ?>><?php echo e($deck->name); ?></option>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                    <option value="" disabled>No deck available</option>
+                                    <option value="" disabled selected>No deck available</option>
                                 <?php endif; ?>
                                 <option value="NEW_DECK">+ Create New Deck...</option>
                             </select>
@@ -159,59 +158,32 @@
             </section>
 
             
-            <section class="import-card import-card--preview">
-                <div class="import-card-section-head import-preview-head">
-                    <div class="import-preview-head__icon">
-                        <span class="material-symbols-outlined">table_view</span>
-                    </div>
-                    <div>
-                        <h2 class="import-card-section-head__title">Row Preview</h2>
-                        <p class="import-card-section-head__sub">Rows grouped by status — invalid rows are skipped automatically on confirm.</p>
-                    </div>
+            <section class="import-card">
+                <div class="import-card-section-head">
+                    <h2 class="import-card-section-head__title">Row Preview</h2>
+                    <p class="import-card-section-head__sub">Rows grouped by status — invalid rows are skipped automatically on confirm.</p>
                 </div>
 
-                <div class="import-preview-toolbar">
-                    <div class="import-tabs">
-                        <button class="import-tab is-mode-active" type="button" data-import-filter="all">
-                            <span>All</span>
-                            <span class="import-tab__count" data-import-tab-count="all">0</span>
-                        </button>
-                        <button class="import-tab" type="button" data-import-filter="valid">
-                            <span class="import-tab__dot import-tab__dot--valid"></span>
-                            <span>Valid</span>
-                            <span class="import-tab__count" data-import-tab-count="valid">0</span>
-                        </button>
-                        <button class="import-tab" type="button" data-import-filter="warning">
-                            <span class="import-tab__dot import-tab__dot--warning"></span>
-                            <span>Warnings</span>
-                            <span class="import-tab__count" data-import-tab-count="warning">0</span>
-                        </button>
-                        <button class="import-tab" type="button" data-import-filter="invalid">
-                            <span class="import-tab__dot import-tab__dot--invalid"></span>
-                            <span>Errors</span>
-                            <span class="import-tab__count" data-import-tab-count="invalid">0</span>
-                        </button>
-                    </div>
-                    <button class="import-swap-btn" type="button" data-import-swap-button aria-pressed="false" disabled>
-                        <span class="material-symbols-outlined">swap_horiz</span>
-                        <span data-import-swap-label>Swap Front/Back</span>
+                <div class="import-tabs">
+                    <button class="import-tab is-mode-active" type="button" data-import-filter="all">All</button>
+                    <button class="import-tab" type="button" data-import-filter="valid">
+                        <span class="import-tab__dot import-tab__dot--valid"></span>Valid
+                    </button>
+                    <button class="import-tab" type="button" data-import-filter="warning">
+                        <span class="import-tab__dot import-tab__dot--warning"></span>Warnings
+                    </button>
+                    <button class="import-tab" type="button" data-import-filter="invalid">
+                        <span class="import-tab__dot import-tab__dot--invalid"></span>Errors
                     </button>
                 </div>
 
                 <div class="import-table-wrap">
                     <table class="import-table">
-                        <colgroup>
-                            <col class="import-table__col-num">
-                            <col class="import-table__col-front">
-                            <col class="import-table__col-back">
-                            <col class="import-table__col-status">
-                            <col class="import-table__col-issues">
-                        </colgroup>
                         <thead>
                             <tr>
                                 <th class="import-table__col-num">#</th>
-                                <th data-import-front-heading>Front</th>
-                                <th data-import-back-heading>Back</th>
+                                <th>Front</th>
+                                <th>Back</th>
                                 <th class="import-table__col-status">Status</th>
                                 <th>Issues</th>
                             </tr>
@@ -219,11 +191,8 @@
                         <tbody data-import-rows-body>
                             <tr>
                                 <td colspan="5" class="import-table__empty">
-                                    <div class="import-table__empty-box">
-                                        <span class="material-symbols-outlined">upload_file</span>
-                                        <strong>No rows previewed yet</strong>
-                                        <p>Choose a deck and TXT file, then run preview to inspect rows before importing.</p>
-                                    </div>
+                                    <span class="material-symbols-outlined">upload_file</span>
+                                    <p>Run preview to see parsed rows.</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -235,4 +204,4 @@
     </section>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\admin\Documents\mine\vibe-coding\resources\views/screens/imports.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\admin\Documents\mine\vibe-coding\resources\views\screens\imports.blade.php ENDPATH**/ ?>

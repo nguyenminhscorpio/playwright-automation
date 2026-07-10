@@ -53,4 +53,4 @@
         </div>
     </body>
 </html>
-<?php /**PATH C:\Users\admin\Documents\mine\vibe-coding\resources\views/layouts/auth.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\Users\admin\Documents\mine\vibe-coding\resources\views\layouts\auth.blade.php ENDPATH**/ ?>
