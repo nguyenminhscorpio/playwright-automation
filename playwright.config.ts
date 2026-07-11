@@ -9,10 +9,12 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:8000';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  globalSetup: './tests/e2e/global-setup.ts',
+  timeout: 60 * 1000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: [['html', { open: 'never' }]],
   use: {
     baseURL,

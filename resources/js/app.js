@@ -191,6 +191,7 @@ const setupDeckDetail = () => {
     const title = app.querySelector("[data-card-modal-title]");
     const feedback = app.querySelector("[data-card-form-feedback]");
     const deckId = Number(app.dataset.deckId || "");
+    const userId = Number(document.body.dataset.authUserId || "");
 
     const deckSwitcher = app.querySelector("[data-deck-switcher]");
     deckSwitcher?.addEventListener("change", () => {
@@ -341,7 +342,7 @@ const setupDeckDetail = () => {
             deleteSubmitBtn.disabled = true;
             deleteFeedback.classList.add("is-hidden");
 
-            const payload = { deck_id: deckId };
+            const payload = { deck_id: deckId, ...(userId ? { user_id: userId } : {}) };
             if (ids[0] === "ALL") {
                 payload.all = true;
                 if (ids.length > 1) {
@@ -381,10 +382,12 @@ const setupDeckDetail = () => {
                     body: JSON.stringify(
                         cardId
                             ? {
+                                  ...(userId ? { user_id: userId } : {}),
                                   front_text: frontInput.value.trim(),
                                   back_text: backInput.value.trim(),
                               }
                             : {
+                                  ...(userId ? { user_id: userId } : {}),
                                   deck_id: deckId,
                                   front_text: frontInput.value.trim(),
                                   back_text: backInput.value.trim(),
