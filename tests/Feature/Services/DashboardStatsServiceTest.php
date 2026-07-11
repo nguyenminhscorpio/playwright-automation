@@ -4,6 +4,7 @@ namespace Tests\Feature\Services;
 
 use App\Models\Card;
 use App\Models\Deck;
+use App\Models\ImportJob;
 use App\Models\Note;
 use App\Models\ReviewLog;
 use App\Models\User;
@@ -181,5 +182,31 @@ class DashboardStatsServiceTest extends TestCase
 
         // Assert — card đã đến lượt, CẦN đếm
         $this->assertSame(1, $result['totals']['due_count']);
+    }
+
+    #[Test]
+    public function given_previewed_import_without_cards_when_build_then_deck_is_not_active(): void
+    {
+        $deck = Deck::factory()->create([
+            'user_id' => $this->user->id,
+            'name' => 'Preview Only Deck',
+        ]);
+
+        ImportJob::create([
+            'user_id' => $this->user->id,
+            'deck_id' => $deck->id,
+            'file_name' => 'preview-only.txt',
+            'file_hash' => 'preview-only-hash',
+            'status' => 'previewed',
+            'total_rows' => 10,
+            'success_rows' => 10,
+            'failed_rows' => 0,
+            'started_at' => now(),
+            'finished_at' => now(),
+        ]);
+
+        $result = $this->service->build($this->user);
+
+        $this->assertSame([], $result['active_decks']);
     }
 }

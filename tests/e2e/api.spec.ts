@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { createDeckViaApi } from './helpers/api-helpers';
+import { gotoAuthenticated } from './helpers/auth-helper';
+import { createCardViaApi, createDeckViaApi } from './helpers/api-helpers';
 
 // Helper tạo payload deck mới với tên unique để tránh đụng dữ liệu giữa các lần chạy.
 const createDeckPayload = (suffix: string) => ({
@@ -36,7 +37,7 @@ test.describe('API Tests', () => {
 });
 
 test.describe('Network Mocking', () => {
-  test('Import page hien thi mocked preview rows khi mock API preview', async ({ page }) => {
+  test('Import page hien thi mocked preview rows khi mock API preview', async ({ page, request }) => {
     // Chặn API preview và trả về dữ liệu giả để UI render preview theo dữ liệu mock.
     await page.route('**/api/imports/txt/preview', async (route) => {
       await route.fulfill({
@@ -80,7 +81,11 @@ test.describe('Network Mocking', () => {
       });
     });
 
-    await page.goto('/imports');
+    await gotoAuthenticated(page, '/imports');
+    const userId = Number(await page.locator('[data-import-app]').getAttribute('data-import-user-id'));
+    const deck = await createDeckViaApi(request, userId, `Mock Import ${Date.now()}`, 'Deck for mocked import preview.');
+    await gotoAuthenticated(page, '/imports');
+    await page.locator('[data-import-deck-select]').selectOption(String(deck.id), { force: true });
     await page.locator('[data-import-file-input]').setInputFiles({
       name: 'mocked-import.txt',
       mimeType: 'text/plain',
@@ -89,9 +94,10 @@ test.describe('Network Mocking', () => {
 
     // Trigger preview rồi verify bảng hiển thị đúng dữ liệu đã mock.
     await page.getByRole('button', { name: /Preview Import/i }).click();
+    await expect(page.locator('[data-import-feedback]')).toContainText('Preview ready', { timeout: 15_000 });
 
-    const rows = page.locator('[data-import-rows-body] tr');
-    await expect(rows).toHaveCount(2);
+    const rows = page.locator('[data-import-rows-body]').last().locator('tr');
+    await expect(rows).toHaveCount(2, { timeout: 15_000 });
     await expect(rows.nth(0)).toContainText('Mock Front 1');
     await expect(rows.nth(0)).toContainText('Mock Back 1');
     await expect(rows.nth(0)).toContainText('valid');
@@ -101,20 +107,23 @@ test.describe('Network Mocking', () => {
 
   test('Dashboard hien thi loi khi API delete deck bi abort', async ({ page, request }) => {
     // Tạo sẵn một deck thật để dashboard có card cần thao tác xóa.
+    await gotoAuthenticated(page, '/dashboard');
+    const userId = Number(await page.locator('[data-dashboard-app]').getAttribute('data-dashboard-user-id'));
     const payload = createDeckPayload(`delete-${Date.now()}`);
     const createdDeck = await createDeckViaApi(
       request,
-      undefined,
+      userId,
       payload.name,
       payload.description
     );
+    await createCardViaApi(request, userId, createdDeck.id, `Abort front ${Date.now()}`, `Abort back ${Date.now()}`);
 
     // Mock lỗi network ở API delete để verify UI hiện feedback lỗi trong popup.
     await page.route(`**/api/decks/${createdDeck.id}`, async (route) => {
       await route.abort();
     });
 
-    await page.goto('/dashboard');
+    await page.reload();
     const deckCard = page.locator(`[data-deck-card][data-deck-id="${createdDeck.id}"]`);
     await expect(deckCard).toBeVisible();
 

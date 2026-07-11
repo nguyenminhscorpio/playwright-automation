@@ -81,7 +81,7 @@ test.describe('Import Flow', () => {
 
     await expect(importPage.feedback).toBeVisible();
     await expect(importPage.feedback).toContainText('Import complete');
-    await expect(importPage.feedback).toContainText('Imported 2 rows');
+    await expect(importPage.feedback).toContainText('2 imported');
   });
 
   test('Should disable confirm button after import', async ({ page }) => {
@@ -104,11 +104,11 @@ test.describe('Import Flow', () => {
     await importPage.createDeckFromModal(firstDeckName);
     await importPage.createDeckFromModal(secondDeckName);
 
-    await importPage.deckSelect.selectOption({ label: firstDeckName });
+    await importPage.deckSelect.selectOption({ label: firstDeckName }, { force: true });
     await expect(importPage.deckSelect).toHaveValue(/^\d+$/);
     await expect(importPage.deckSelect.locator('option:checked')).toHaveText(firstDeckName);
 
-    await importPage.deckSelect.selectOption({ label: secondDeckName });
+    await importPage.deckSelect.selectOption({ label: secondDeckName }, { force: true });
     await expect(importPage.deckSelect.locator('option:checked')).toHaveText(secondDeckName);
   });
 });

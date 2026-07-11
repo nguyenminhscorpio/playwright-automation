@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createDeckViaApi, deleteDeckViaApi } from './helpers/api-helpers';
+import { createCardViaApi, createDeckViaApi, deleteDeckViaApi } from './helpers/api-helpers';
 import { DashboardPage } from './pages/dashboard.page';
 
 test.describe('Dashboard', () => {
@@ -8,17 +8,16 @@ test.describe('Dashboard', () => {
   });
 
   test('trang Dashboard load thanh cong, hien thi loi chao', async ({ page }) => {
-    await expect(page.getByRole('heading', { level: 1, name: /Welcome back,/ })).toBeVisible();
-    await expect(
-      page.getByText('Track your streak, monthly milestone, and the decks that need attention most today.')
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: /Good (morning|afternoon|evening),/ })).toBeVisible();
+    await expect(page.getByText('Track your streak, review due cards, and manage your decks.')).toBeVisible();
   });
 
   test('Quick Stats hien thi Streak va Milestone', async ({ page }) => {
     await expect(page.getByText('Daily Streak')).toBeVisible();
-    await expect(page.getByText('Learning Milestone')).toBeVisible();
-    await expect(page.getByText('Monthly progress')).toBeVisible();
-    await expect(page.locator('.stat-card__value').first()).toBeVisible();
+    await expect(page.getByText('Due Today')).toBeVisible();
+    await expect(page.getByText('Library')).toBeVisible();
+    await expect(page.getByText('Monthly Goal')).toBeVisible();
+    await expect(page.locator('.dash-stat__val').first()).toBeVisible();
   });
 
   test('Active Decks grid hien thi danh sach deck', async ({ page, request }) => {
@@ -32,6 +31,7 @@ test.describe('Dashboard', () => {
     );
 
     try {
+      await createCardViaApi(request, userId, deck.id, `Grid front ${Date.now()}`, `Grid back ${Date.now()}`);
       await page.reload();
       await expect(page.getByRole('heading', { level: 2, name: 'Active Decks' })).toBeVisible();
       await expect(dashboardPage.deckCardByName(deck.name)).toBeVisible();
@@ -55,6 +55,7 @@ test.describe('Dashboard', () => {
       'Deck created to verify delete flow.'
     );
 
+    await createCardViaApi(request, userId, deck.id, `Delete front ${Date.now()}`, `Delete back ${Date.now()}`);
     await page.reload();
 
     const card = dashboardPage.deckCardByName(deck.name);
@@ -84,14 +85,14 @@ test.describe('Dashboard', () => {
     );
 
     try {
+      await createCardViaApi(request, userId, deck.id, `Detail front ${Date.now()}`, `Detail back ${Date.now()}`);
       await page.reload();
       const card = dashboardPage.deckCardByName(deck.name);
 
-      await card.getByRole('link', { name: 'Open Deck' }).click();
+      await card.getByRole('link', { name: 'Manage' }).click();
       await page.waitForURL(new RegExp(`/decks/${deck.id}$`));
 
-      await expect(page.getByRole('heading', { level: 1, name: /Card Management/ })).toBeVisible();
-      await expect(page.locator('.card-manager-deck-badge', { hasText: deck.name })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: deck.name })).toBeVisible();
     } finally {
       await deleteDeckViaApi(request, userId, deck.id);
     }
@@ -108,12 +109,13 @@ test.describe('Dashboard', () => {
     );
 
     try {
+      await createCardViaApi(request, userId, deck.id, `Study front ${Date.now()}`, `Study back ${Date.now()}`);
       await page.reload();
       const card = dashboardPage.deckCardByName(deck.name);
 
-      await card.getByRole('link', { name: /Review \d+ Cards/ }).click();
-      await page.waitForURL(new RegExp(`/study/front\\?deck_id=${deck.id}`));
-      await expect(page.getByRole('heading', { level: 1, name: 'Session Progress' })).toBeVisible();
+      await card.getByRole('link', { name: /Review/ }).click();
+      await page.waitForURL(new RegExp(`/study/typing\\?deck_id=${deck.id}`));
+      await expect(page.locator('[data-study-app]')).toBeVisible();
     } finally {
       await deleteDeckViaApi(request, userId, deck.id);
     }

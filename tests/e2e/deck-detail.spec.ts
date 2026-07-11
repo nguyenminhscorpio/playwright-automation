@@ -28,7 +28,6 @@ test.describe('Deck Detail', () => {
       await expect(page.getByRole('columnheader', { name: 'STATUS' })).toBeVisible();
       await expect(page.getByRole('columnheader', { name: 'LAST REVIEWED' })).toBeVisible();
       await expect(page.getByRole('columnheader', { name: 'NEXT' })).toBeVisible();
-      await expect(page.getByRole('columnheader', { name: 'ACTIONS' })).toBeVisible();
       await expect(deckDetailPage.cardRows).toHaveCount(1);
     } finally {
       await deleteDeckViaApi(request, userId, deck.id);
@@ -273,7 +272,7 @@ test.describe('Deck Detail', () => {
 
       await deckDetailPage.deckSwitcher.selectOption(String(secondDeck.id));
       await expect(page).toHaveURL(new RegExp(`/decks/${secondDeck.id}$`));
-      await expect(page.locator('.card-manager-deck-badge')).toHaveText(secondDeck.name);
+      await expect(page.getByRole('heading', { level: 1, name: secondDeck.name })).toBeVisible();
     } finally {
       await deleteDeckViaApi(request, userId, firstDeck.id);
       await deleteDeckViaApi(request, userId, secondDeck.id);

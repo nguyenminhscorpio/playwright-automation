@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { gotoAuthenticated } from '../helpers/auth-helper';
 
 export class DashboardPage {
   readonly dashboardApp: Locator;
@@ -22,8 +23,9 @@ export class DashboardPage {
   }
 
   async goto() {
-    await this.page.goto('/dashboard');
+    await gotoAuthenticated(this.page, '/dashboard');
     await expect(this.page).toHaveURL(/\/dashboard$/);
+    await expect(this.dashboardApp).toBeVisible();
   }
 
   async getUserId() {
@@ -34,7 +36,7 @@ export class DashboardPage {
 
   deckCardByName(deckName: string) {
     return this.deckCards.filter({
-      has: this.page.locator('.deck-card__title', { hasText: deckName }),
+      has: this.page.locator('.dash-deck__title', { hasText: deckName }),
     });
   }
 

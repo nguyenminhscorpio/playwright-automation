@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { gotoAuthenticated } from '../helpers/auth-helper';
 
 export class DeckDetailPage {
   readonly app: Locator;
@@ -19,12 +20,12 @@ export class DeckDetailPage {
     this.bulkDeleteButton = page.locator('[data-action-bulk-delete]');
     this.selectAllCheckbox = page.locator('[data-select-all-checkbox]');
     this.deckSwitcher = page.locator('[data-deck-switcher]');
-    this.searchInput = page.getByPlaceholder('Search cards by front, back, or description...');
-    this.applyButton = page.getByRole('button', { name: 'Apply' });
+    this.searchInput = page.getByPlaceholder('Search front or back text...');
+    this.applyButton = page.getByRole('button', { name: /Filter/ });
   }
 
   async goto(deckId: number) {
-    await this.page.goto(`/decks/${deckId}`);
+    await gotoAuthenticated(this.page, `/decks/${deckId}`);
     await expect(this.page).toHaveURL(new RegExp(`/decks/${deckId}$`));
     await expect(this.app).toBeVisible();
   }
@@ -44,7 +45,7 @@ export class DeckDetailPage {
   }
 
   async openCreateCardModal() {
-    await this.page.getByRole('button', { name: 'Create Card' }).click();
+    await this.page.getByRole('button', { name: /Add Card/ }).click();
     await expect(this.cardModal).toBeVisible();
   }
 
