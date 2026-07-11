@@ -566,6 +566,237 @@ const setupDeckSelect = (nativeSelect) => {
     // Collapse panel (buildOptions opens it conceptually, but panel is still hidden)
 };
 
+const setupStatusFilterSelect = () => {
+    const nativeSelect = document.querySelector("[data-status-select]");
+    const wrap = nativeSelect?.closest("[data-status-select-wrap]");
+    if (!nativeSelect || !wrap) return;
+    const form = nativeSelect.closest("form");
+
+    nativeSelect.classList.add("is-enhanced");
+    form?.classList.add("is-auto-filter");
+
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "dd-status-select-trigger";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const icon = document.createElement("span");
+    icon.className = "material-symbols-outlined dd-status-select-trigger__icon";
+    icon.textContent = "tune";
+
+    const label = document.createElement("span");
+    label.className = "dd-status-select-trigger__label";
+
+    const chevron = document.createElement("span");
+    chevron.className =
+        "material-symbols-outlined dd-status-select-trigger__chevron";
+    chevron.textContent = "expand_more";
+
+    const panel = document.createElement("div");
+    panel.className = "dd-status-select-panel is-hidden";
+    panel.setAttribute("role", "listbox");
+
+    trigger.append(icon, label, chevron);
+    wrap.append(trigger, panel);
+
+    const statusIcons = {
+        all: "view_list",
+        new: "fiber_new",
+        learning: "neurology",
+        review: "verified",
+    };
+
+    const isOpen = () => !panel.classList.contains("is-hidden");
+
+    const closePanel = () => {
+        panel.classList.add("is-hidden");
+        trigger.classList.remove("is-open");
+        trigger.setAttribute("aria-expanded", "false");
+    };
+
+    const updateLabel = () => {
+        const selected = nativeSelect.selectedOptions[0];
+        label.textContent = selected?.textContent || "All Status";
+        icon.textContent = statusIcons[nativeSelect.value] || "tune";
+    };
+
+    const buildOptions = () => {
+        panel.innerHTML = "";
+
+        Array.from(nativeSelect.options).forEach((option) => {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className =
+                "dd-status-select-option" +
+                (option.value === nativeSelect.value ? " is-selected" : "");
+            item.setAttribute("role", "option");
+            item.setAttribute(
+                "aria-selected",
+                String(option.value === nativeSelect.value),
+            );
+
+            const optionIcon = document.createElement("span");
+            optionIcon.className =
+                "material-symbols-outlined dd-status-select-option__icon";
+            optionIcon.textContent = statusIcons[option.value] || "circle";
+
+            const text = document.createElement("span");
+            text.className = "dd-status-select-option__text";
+            text.textContent = option.textContent;
+
+            const check = document.createElement("span");
+            check.className =
+                "material-symbols-outlined dd-status-select-option__check";
+            check.textContent = "check";
+
+            item.append(optionIcon, text, check);
+            item.addEventListener("click", () => {
+                const changed = nativeSelect.value !== option.value;
+                nativeSelect.value = option.value;
+                updateLabel();
+                closePanel();
+                if (changed) {
+                    nativeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+            });
+
+            panel.append(item);
+        });
+    };
+
+    const openPanel = () => {
+        buildOptions();
+        panel.classList.remove("is-hidden");
+        trigger.classList.add("is-open");
+        trigger.setAttribute("aria-expanded", "true");
+    };
+
+    trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        isOpen() ? closePanel() : openPanel();
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!wrap.contains(event.target)) closePanel();
+    });
+
+    wrap.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closePanel();
+    });
+
+    nativeSelect.addEventListener("change", () => {
+        updateLabel();
+        form?.requestSubmit();
+    });
+    updateLabel();
+};
+
+const setupDeckSwitcherSelect = () => {
+    const nativeSelect = document.querySelector("[data-deck-switcher]");
+    const wrap = nativeSelect?.closest("[data-deck-switcher-wrap]");
+    if (!nativeSelect || !wrap) return;
+
+    nativeSelect.classList.add("is-enhanced");
+
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "dd-deck-switcher-trigger";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const icon = document.createElement("span");
+    icon.className = "material-symbols-outlined dd-deck-switcher-trigger__icon";
+    icon.textContent = "layers";
+
+    const label = document.createElement("span");
+    label.className = "dd-deck-switcher-trigger__label";
+
+    const chevron = document.createElement("span");
+    chevron.className =
+        "material-symbols-outlined dd-deck-switcher-trigger__chevron";
+    chevron.textContent = "expand_more";
+
+    const panel = document.createElement("div");
+    panel.className = "dd-deck-switcher-panel is-hidden";
+    panel.setAttribute("role", "listbox");
+
+    trigger.append(icon, label, chevron);
+    wrap.append(trigger, panel);
+
+    const isOpen = () => !panel.classList.contains("is-hidden");
+
+    const closePanel = () => {
+        panel.classList.add("is-hidden");
+        trigger.classList.remove("is-open");
+        trigger.setAttribute("aria-expanded", "false");
+    };
+
+    const updateLabel = () => {
+        label.textContent =
+            nativeSelect.selectedOptions[0]?.textContent || "Select deck";
+    };
+
+    const buildOptions = () => {
+        panel.innerHTML = "";
+
+        Array.from(nativeSelect.options).forEach((option) => {
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className =
+                "dd-deck-switcher-option" +
+                (option.value === nativeSelect.value ? " is-selected" : "");
+            item.setAttribute("role", "option");
+            item.setAttribute(
+                "aria-selected",
+                String(option.value === nativeSelect.value),
+            );
+
+            const text = document.createElement("span");
+            text.className = "dd-deck-switcher-option__text";
+            text.textContent = option.textContent;
+
+            const check = document.createElement("span");
+            check.className =
+                "material-symbols-outlined dd-deck-switcher-option__check";
+            check.textContent = "check";
+
+            item.append(text, check);
+            item.addEventListener("click", () => {
+                nativeSelect.value = option.value;
+                nativeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                updateLabel();
+                closePanel();
+            });
+
+            panel.append(item);
+        });
+    };
+
+    const openPanel = () => {
+        buildOptions();
+        panel.classList.remove("is-hidden");
+        trigger.classList.add("is-open");
+        trigger.setAttribute("aria-expanded", "true");
+    };
+
+    trigger.addEventListener("click", (event) => {
+        event.stopPropagation();
+        isOpen() ? closePanel() : openPanel();
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!wrap.contains(event.target)) closePanel();
+    });
+
+    wrap.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closePanel();
+    });
+
+    nativeSelect.addEventListener("change", updateLabel);
+    updateLabel();
+};
+
 const setupImport = () => {
     const app = document.querySelector("[data-import-app]");
     if (!app) return;
@@ -1359,6 +1590,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupCreateDeck();
     setupDashboard();
     setupDeckDetail();
+    setupStatusFilterSelect();
+    setupDeckSwitcherSelect();
     setupImport();
     await setupStudy();
 });

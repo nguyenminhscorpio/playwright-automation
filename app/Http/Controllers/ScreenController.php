@@ -52,7 +52,7 @@ class ScreenController extends Controller
         ]);
     }
 
-    public function deckDetail(Request $request, string $deck, CardRepository $cardRepository): View
+    public function deckDetail(Request $request, string $deck, CardRepository $cardRepository): Response
     {
         [$user] = $this->resolveStudyContext($request);
 
@@ -101,16 +101,20 @@ class ScreenController extends Controller
             })->count(),
         ];
 
-        return view('screens.deck-detail', [
-            'title' => 'FlashMind - ' . $deckModel->name,
-            'page' => 'deck-detail',
-            'deckDetailUserId' => $user?->id,
-            'deck' => $deckModel,
-            'allDecks' => $allDecks,
-            'cards' => $cards,
-            'filters' => $filters,
-            'deckStats' => $deckStats,
-        ]);
+        return response()
+            ->view('screens.deck-detail', [
+                'title' => 'FlashMind - ' . $deckModel->name,
+                'page' => 'deck-detail',
+                'deckDetailUserId' => $user?->id,
+                'deck' => $deckModel,
+                'allDecks' => $allDecks,
+                'cards' => $cards,
+                'filters' => $filters,
+                'deckStats' => $deckStats,
+            ])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Fri, 01 Jan 1990 00:00:00 GMT');
     }
 
     public function imports(Request $request): View
