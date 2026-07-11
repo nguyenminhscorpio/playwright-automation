@@ -979,6 +979,15 @@ const setupStudy = async () => {
         const el = document.querySelector(selector);
         if (el) el.textContent = value;
     };
+    const withQueryParams = (url, params = {}) => {
+        const nextUrl = new URL(url, window.location.origin);
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+                nextUrl.searchParams.set(key, value);
+            }
+        });
+        return nextUrl.toString();
+    };
 
     const session = await fetchJson(sessionUrl.toString()).catch(() => null);
 
@@ -1059,12 +1068,10 @@ const setupStudy = async () => {
                 JSON.stringify({ session, card, mode: session.mode }),
             );
             window.location.href =
-                body.dataset.studyAnswerUrl +
-                "?mode=" +
-                (body.dataset.studyMode || "flip") +
-                (body.dataset.studyDeckId
-                    ? "&deck_id=" + body.dataset.studyDeckId
-                    : "");
+                withQueryParams(body.dataset.studyAnswerUrl, {
+                    mode: session.mode || body.dataset.studyMode || "flip",
+                    deck_id: body.dataset.studyDeckId,
+                });
         };
 
         revealButton.addEventListener("click", revealAnswer);
@@ -1117,11 +1124,10 @@ const setupStudy = async () => {
                 }),
             );
             window.location.href =
-                body.dataset.studyAnswerUrl +
-                "?mode=typing" +
-                (body.dataset.studyDeckId
-                    ? "&deck_id=" + body.dataset.studyDeckId
-                    : "");
+                withQueryParams(body.dataset.studyAnswerUrl, {
+                    mode: "typing",
+                    deck_id: body.dataset.studyDeckId,
+                });
         };
 
         checkButton.addEventListener("click", checkTypedAnswer);
@@ -1235,6 +1241,7 @@ const setupStudy = async () => {
             sessionStorage.getItem("flashmind-study-reveal") || "{}",
         );
         if (stored.card) {
+            const storedMode = stored.mode || body.dataset.studyMode || "flip";
             setText(
                 "[data-study-front-text]",
                 stored.card.front_text ||
@@ -1246,6 +1253,17 @@ const setupStudy = async () => {
                 stored.card.back_text ||
                     stored.card.back_plain_text ||
                     "No answer available.",
+            );
+            setText("[data-study-mode-tag]", `Mode: ${storedMode}`);
+            setText(
+                "[data-study-answer-label]",
+                storedMode === "typing" ? "Correct Answer" : "Back Side",
+            );
+            setText(
+                "[data-study-rating-title]",
+                storedMode === "typing"
+                    ? "How well did you know this after checking?"
+                    : "How difficult was this to recall?",
             );
             setText("[data-study-user-answer]", stored.user_answer || "");
             document
@@ -1307,14 +1325,15 @@ const setupStudy = async () => {
                     stopTts();
                     sessionStorage.removeItem("flashmind-study-reveal");
                     window.location.href =
-                        (storedPayload.mode === "typing"
-                            ? body.dataset.studyTypingUrl
-                            : body.dataset.studyFrontUrl) +
-                        "?mode=" +
-                        (storedPayload.mode || "flip") +
-                        (body.dataset.studyDeckId
-                            ? "&deck_id=" + body.dataset.studyDeckId
-                            : "");
+                        withQueryParams(
+                            storedPayload.mode === "typing"
+                                ? body.dataset.studyTypingUrl
+                                : body.dataset.studyFrontUrl,
+                            {
+                                mode: storedPayload.mode || "flip",
+                                deck_id: body.dataset.studyDeckId,
+                            },
+                        );
                 }),
             );
     }
