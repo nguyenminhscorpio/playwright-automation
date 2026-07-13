@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 import path from 'path';
+import { gotoAuthenticated } from '../helpers/auth-helper';
 
 export class ImportPage {
   readonly deckSelect: Locator;
@@ -18,19 +19,19 @@ export class ImportPage {
     this.newDeckNameInput = page.locator('#new-deck-name');
     this.fileInput = page.locator('[data-import-file-input]');
     this.previewButton = page.getByRole('button', { name: /Preview Import/i });
-    this.confirmButton = page.getByRole('button', { name: /Confirm Import/i });
+    this.confirmButton = page.locator('[data-import-confirm-button]');
     this.swapButton = page.getByRole('button', { name: /Swap Front\/Back/i });
     this.feedback = page.locator('[data-import-feedback]');
-    this.previewRows = page.locator('[data-import-rows-body] tr');
+    this.previewRows = page.locator('[data-import-rows-body]').last().locator('tr');
   }
 
   async goto() {
-    await this.page.goto('/imports');
+    await gotoAuthenticated(this.page, '/imports');
     await expect(this.page).toHaveURL(/\/imports$/);
   }
 
   async openCreateDeckModalFromSelect() {
-    await this.deckSelect.selectOption('NEW_DECK');
+    await this.deckSelect.selectOption('NEW_DECK', { force: true });
     await expect(this.createDeckModal).toBeVisible();
   }
 
@@ -56,6 +57,7 @@ export class ImportPage {
 
   async previewImport() {
     await this.previewButton.click();
+    await expect(this.feedback).toContainText('Preview ready', { timeout: 15_000 });
   }
 
   async createDeckAndPreview(deckName: string, fileContent: string) {

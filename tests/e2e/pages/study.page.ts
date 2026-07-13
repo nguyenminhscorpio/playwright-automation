@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
+import { gotoAuthenticated } from '../helpers/auth-helper';
 
 export class StudyPage {
   readonly frontText: Locator;
@@ -30,12 +31,12 @@ export class StudyPage {
   }
 
   async gotoFront(deckId: number) {
-    await this.page.goto(`/study/front?deck_id=${deckId}`);
+    await gotoAuthenticated(this.page, `/study/front?deck_id=${deckId}`);
     await expect(this.page).toHaveURL(new RegExp(`/study/front\\?deck_id=${deckId}`));
   }
 
   async gotoTyping(deckId: number) {
-    await this.page.goto(`/study/typing?deck_id=${deckId}`);
+    await gotoAuthenticated(this.page, `/study/typing?deck_id=${deckId}`);
     await expect(this.page).toHaveURL(new RegExp(`/study/typing\\?deck_id=${deckId}`));
   }
 

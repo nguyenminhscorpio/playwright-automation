@@ -97,7 +97,7 @@ class DashboardStatsService
     {
         return Deck::query()
             ->where('decks.user_id', $user->id)
-            ->leftJoin('cards', 'cards.deck_id', '=', 'decks.id')
+            ->join('cards', 'cards.deck_id', '=', 'decks.id')
             ->select([
                 'decks.id',
                 'decks.name',
