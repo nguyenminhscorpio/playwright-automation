@@ -3116,8 +3116,12 @@ a.sidebar__user {
 
 .custom-modal {
     position: fixed;
-    inset: 0;
-    margin: auto;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    translate: -50% -50%;
+    margin: 0;
     border: none;
     border-radius: var(--radius-md);
     padding: 0;
@@ -4505,8 +4509,12 @@ a.sidebar__user {
 /* ── Modal ───────────────────────────────────────────── */
 .dd-modal {
     position: fixed;
-    inset: 0;
-    margin: auto;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    translate: -50% -50%;
+    margin: 0;
     border: none;
     border-radius: var(--radius-lg);
     padding: 0;
